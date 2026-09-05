@@ -1,0 +1,1620 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cours interactif de révision — Architecture des systèmes sur puce (SoC).">
+  <meta name="theme-color" content="#0d3038">
+  <title>SoC — Révision interactive</title>
+  <script>
+    (() => {
+      let saved = null;
+      try { saved = JSON.parse(localStorage.getItem("soc-color-theme") || "null"); } catch (_) { /* mode privé/file:// */ }
+      const theme = saved === "dark" || saved === "light"
+        ? saved
+        : (window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#091b21" : "#0d3038");
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Aller au cours</a>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="course-sidebar" aria-label="Navigation du cours">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">SoC</div>
+        <div>
+          <strong>Architecture des SoC</strong>
+          <small>Révision interactive · hors ligne</small>
+        </div>
+      </div>
+
+      <div class="exam-countdown">
+        <p class="eyebrow">Objectif</p>
+        <strong>Prêt en 2 jours</strong>
+      </div>
+
+      <nav class="side-nav">
+        <p class="nav-section-label">Parcours</p>
+        <button class="nav-link active" data-target="home" type="button" aria-current="page">
+          <span class="nav-icon">⌂</span><span>Tableau de bord</span><span class="nav-count">00</span>
+        </button>
+        <button class="nav-link" data-target="intro" type="button">
+          <span class="nav-icon">01</span><span>Fondations SoC</span><span class="nav-count">5</span>
+        </button>
+        <button class="nav-link" data-target="infra" type="button">
+          <span class="nav-icon">02</span><span>Communication</span><span class="nav-count">5</span>
+        </button>
+        <button class="nav-link" data-target="memory" type="button">
+          <span class="nav-icon">03</span><span>Mémoire & caches</span><span class="nav-count">5</span>
+        </button>
+        <button class="nav-link" data-target="cnn" type="button">
+          <span class="nav-icon">04</span><span>CNN & accélérateurs</span><span class="nav-count">6</span>
+        </button>
+
+        <p class="nav-section-label">Microarchitecture</p>
+        <button class="nav-link" data-target="precise" type="button">
+          <span class="nav-icon">05</span><span>Exceptions précises</span><span class="nav-count">5</span>
+        </button>
+        <button class="nav-link" data-target="ooo" type="button">
+          <span class="nav-icon">06</span><span>Exécution OoO</span><span class="nav-count">5</span>
+        </button>
+        <button class="nav-link" data-target="multicore" type="button">
+          <span class="nav-icon">07</span><span>Multicœurs & cohérence</span><span class="nav-count">5</span>
+        </button>
+        <button class="nav-link" data-target="sync" type="button">
+          <span class="nav-icon">08</span><span>Synchronisation</span><span class="nav-count">5</span>
+        </button>
+
+        <p class="nav-section-label">Entraînement</p>
+        <button class="nav-link exam-nav" data-target="annales" type="button">
+          <span class="nav-icon">✎</span><span>Annales corrigées</span><span class="nav-count">83</span>
+        </button>
+        <button class="nav-link" data-target="synthesis" type="button">
+          <span class="nav-icon">Σ</span><span>Fiche express</span><span class="nav-count">1</span>
+        </button>
+        <button class="nav-link" data-target="flashcards" type="button">
+          <span class="nav-icon">↻</span><span>Flashcards</span><span class="nav-count">60</span>
+        </button>
+        <button class="nav-link" data-target="quiz" type="button">
+          <span class="nav-icon">?</span><span>Examen blanc</span><span class="nav-count">2 h</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-progress">
+        <div class="progress-meta"><span>Leçons maîtrisées</span><strong id="progress-label">0 / 41</strong></div>
+        <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+    </aside>
+
+    <div class="main-shell">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobile-menu" type="button" aria-label="Ouvrir le menu" aria-controls="course-sidebar" aria-expanded="false">☰</button>
+        <div class="search-wrap">
+          <label class="sr-only" for="global-search">Rechercher dans le cours</label>
+          <input id="global-search" type="search" placeholder="Rechercher : ROB, MSI, DMA, annale…" autocomplete="off">
+          <div class="search-results" id="search-results" aria-label="Résultats de recherche" aria-live="polite"></div>
+        </div>
+        <div class="mode-switch" aria-label="Niveau de détail">
+          <button class="mode-btn" data-mode="focus" type="button" title="Afficher uniquement l’essentiel" aria-label="Mode essentiel" aria-pressed="false">⚡ <span>Essentiel</span></button>
+          <button class="mode-btn active" data-mode="complete" type="button" title="Afficher tout le cours" aria-label="Mode complet" aria-pressed="true">☷ <span>Complet</span></button>
+        </div>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Mode sombre" title="Activer le mode sombre"><span class="theme-icon" aria-hidden="true">☾</span><span class="theme-label">Sombre</span></button>
+      </header>
+
+      <main class="content" id="main-content" tabindex="-1">
+        <section class="course-panel active" id="panel-home" data-panel="home">
+          <div class="panel-hero">
+            <p class="eyebrow">Architecture des systèmes sur puce</p>
+            <h1>Comprendre le SoC,<br>pas réciter des slides.</h1>
+            <p class="lead">Les huit supports et cinq annales ont été fusionnés en un parcours visuel : cours expliqué, animations rejouables, calculs guidés, énoncés fidèles et réponses rédigées comme à l’examen.</p>
+            <div class="hero-actions">
+              <button class="btn" data-go="intro" type="button">Commencer le parcours →</button>
+              <button class="btn secondary" data-go="annales" type="button">Ouvrir les annales corrigées</button>
+            </div>
+          </div>
+
+          <div class="stats-grid" aria-label="Statistiques du cours">
+            <div class="stat"><strong>13</strong><span>PDF fusionnés</span></div>
+            <div class="stat"><strong>605</strong><span>pages analysées</span></div>
+            <div class="stat"><strong>41</strong><span>leçons progressives</span></div>
+            <div class="stat"><strong>83</strong><span>questions d’annales corrigées</span></div>
+          </div>
+
+          <div class="section-heading">
+            <div><p class="eyebrow">Plan de bataille</p><h2>Deux jours, sans se disperser</h2></div>
+            <p>Le mode « Essentiel » masque les détails secondaires. Reviens en mode « Complet » sur les points que tu maîtrises moins.</p>
+          </div>
+
+          <div class="timeline">
+            <div class="timeline-step"><span class="tag">Jour 1 · matin</span><strong>SoC + bus + mémoire</strong><small>3 h · architecture, DMA, AXI, caches et calculs de débit</small></div>
+            <div class="timeline-step"><span class="tag gold">Jour 1 · après-midi</span><strong>CNN + microarchitecture</strong><small>3 h · calcul, état précis, ROB, renommage et Tomasulo</small></div>
+            <div class="timeline-step"><span class="tag coral">Jour 2 · matin</span><strong>Multicœur + synchronisation</strong><small>3 h · Amdahl, MSI, atomiques, verrous et barrières</small></div>
+            <div class="timeline-step"><span class="tag blue">Jour 2 · soir</span><strong>Annales en conditions</strong><small>3 h · répondre sans aide, corriger, refaire les calculs ratés</small></div>
+          </div>
+
+          <div class="exam-tip">
+            <strong>Méthode de révision</strong>
+            Pour chaque leçon : lis l’idée centrale, manipule l’animation, referme le contenu puis explique-le à voix haute. Marque la leçon comme comprise seulement si tu peux la redessiner ou refaire le calcul sans regarder.
+          </div>
+
+          <div class="section-heading">
+            <div><p class="eyebrow">Les 8 chapitres</p><h2>Choisis ton point faible</h2></div>
+          </div>
+
+          <div class="course-grid">
+            <article class="card course-card" data-number="1" data-go="intro" tabindex="0">
+              <span class="tag">Fondations</span>
+              <h3>Pourquoi un SoC est hétérogène</h3>
+              <p>Blocs, énergie, parallélisme, murs mémoire et thermique, méthode de conception.</p>
+              <div class="card-footer"><span>5 leçons</span><span>Ouvrir →</span></div>
+            </article>
+            <article class="card course-card" data-number="2" data-go="infra" tabindex="0">
+              <span class="tag blue">Interconnexions</span>
+              <h3>Faire circuler les données</h3>
+              <p>Bus, arbitrage, DMA, AHB, AXI, NoC, IDs et synchronisation.</p>
+              <div class="card-footer"><span>5 leçons</span><span>Ouvrir →</span></div>
+            </article>
+            <article class="card course-card" data-number="3" data-go="memory" tabindex="0">
+              <span class="tag gold">Mémoire</span>
+              <h3>Nourrir les unités de calcul</h3>
+              <p>SRAM, SDRAM, contrôleur, localités, caches, scratchpad et réutilisation.</p>
+              <div class="card-footer"><span>5 leçons</span><span>Ouvrir →</span></div>
+            </article>
+            <article class="card course-card" data-number="4" data-go="cnn" tabindex="0">
+              <span class="tag coral">IA embarquée</span>
+              <h3>Mapper un CNN sur le matériel</h3>
+              <p>Virgule fixe, convolution, SIMD, produits matriciels et accélérateurs dédiés.</p>
+              <div class="card-footer"><span>6 leçons</span><span>Ouvrir →</span></div>
+            </article>
+            <article class="card course-card" data-number="5" data-go="precise" tabindex="0">
+              <span class="tag gold">État précis</span>
+              <h3>Terminer vite, committer dans l’ordre</h3>
+              <p>Exceptions, ROB, EPC/Cause, History Buffer, Future Map, checkpoints et stores spéculatifs.</p>
+              <div class="card-footer"><span>5 leçons</span><span>Ouvrir →</span></div>
+            </article>
+            <article class="card course-card" data-number="6" data-go="ooo" tabindex="0">
+              <span class="tag blue">Hors ordre</span>
+              <h3>Faire avancer le travail indépendant</h3>
+              <p>Tomasulo, RAT, stations de réservation, wakeup/select, PRF, LSQ et prédiction mémoire.</p>
+              <div class="card-footer"><span>5 leçons</span><span>Ouvrir →</span></div>
+            </article>
+            <article class="card course-card" data-number="7" data-go="multicore" tabindex="0">
+              <span class="tag coral">Multicœur</span>
+              <h3>Partager la mémoire sans se contredire</h3>
+              <p>ILP/TLP/DLP, Amdahl, UMA/NUMA, cohérence, snooping, MSI et répertoires.</p>
+              <div class="card-footer"><span>5 leçons</span><span>Ouvrir →</span></div>
+            </article>
+            <article class="card course-card" data-number="8" data-go="sync" tabindex="0">
+              <span class="tag">Synchronisation</span>
+              <h3>Rendre les accès concurrents corrects</h3>
+              <p>LR/SC, AMO, spinlocks, acquire/release, interblocage, barrières et ticket locks.</p>
+              <div class="card-footer"><span>5 leçons</span><span>Ouvrir →</span></div>
+            </article>
+          </div>
+
+          <article class="annals-callout" data-go="annales" tabindex="0">
+            <div><span class="tag gold">Priorité examen</span><h2>5 annales · 83 corrections guidées</h2><p>Retrouve désormais l’énoncé complet avant chaque correction, puis suis les données, le raisonnement pas à pas et la conclusion prête à écrire.</p></div>
+            <span class="annals-arrow" aria-hidden="true">→</span>
+          </article>
+        </section>
+
+        <section class="course-panel" id="panel-intro" data-panel="intro">
+          <div class="panel-hero intro-hero">
+            <p class="eyebrow">Chapitre 01 · SLE_SoC_intro</p>
+            <h1>Le SoC : un système complet sous contraintes</h1>
+            <p class="lead">Un SoC n’est pas seulement « beaucoup de transistors ». C’est un compromis entre calcul, mémoire, communication, énergie, surface, souplesse et temps de développement.</p>
+            <div class="hero-actions"><button class="btn" data-scroll="intro-1" type="button">Démarrer la leçon</button><a class="btn secondary" href="../Docs%20Cours/SLE_SoC_intro.pdf" target="_blank" rel="noopener">Support original ↗</a></div>
+          </div>
+
+          <div class="source-banner"><span>Source principale : <strong>S. Mancini — Architecture des SoC, Introduction</strong></span><a href="../Docs%20Cours/SLE_SoC_intro.pdf" target="_blank" rel="noopener">Ouvrir les 50 pages ↗</a></div>
+          <div class="focus-only core-idea"><strong>Fil rouge</strong>Davantage de transistors ne donnent de la performance que si l’énergie, les fils, la mémoire, la chaleur et le logiciel suivent.</div>
+
+          <article class="lesson searchable" id="intro-1" data-lesson="intro-1" data-title="Définition et anatomie d’un SoC" data-panel-id="intro">
+            <header class="lesson-head">
+              <span class="lesson-index">1.1</span>
+              <div class="lesson-title-wrap"><h2>Définition et anatomie d’un SoC</h2><p>Du logiciel jusqu’aux interfaces physiques</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 1.1 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="core-idea"><strong>Définition</strong>Un <em>System on Chip</em> réunit sur une même puce les fonctions principales d’un système : calcul, stockage local, communications, accélération et interfaces avec le monde extérieur. Une RAM volumineuse peut rester externe.</div>
+
+              <div class="two-col">
+                <div>
+                  <p>Le logiciel (OS, programmes, données) s’exécute sur une architecture matérielle hétérogène. Le bus ou le réseau interne permet aux blocs adressables d’échanger des données, souvent dans un espace d’adressage partagé. La cohérence des caches est une propriété distincte, qui n’est pas garantie par le seul adressage partagé.</p>
+                  <ul class="clean-list">
+                    <li><strong>CPU :</strong> contrôle, OS et calcul irrégulier.</li>
+                    <li><strong>DSP :</strong> boucles régulières de signal.</li>
+                    <li><strong>ASIC/IP :</strong> fonction spécialisée très efficace.</li>
+                    <li><strong>Mémoires :</strong> cache, SRAM/DRAM internes, RAM externe.</li>
+                    <li><strong>Analogique / MEMS :</strong> conversion, RF, capteurs, actionneurs.</li>
+                    <li><strong>Contrôleurs :</strong> mémoire, interruptions, DMA et I/O.</li>
+                  </ul>
+                  <div class="warning"><strong>Piège classique</strong>« Tout sur une puce » ne signifie pas « toute la mémoire sur la puce ». La DDR externe, reliée par un contrôleur, fait partie du système.</div>
+                </div>
+                <div>
+                  <div class="soc-diagram" id="soc-diagram" aria-label="Schéma interactif d’un SoC">
+                    <div class="soc-bus"></div><div class="data-pulse"></div>
+                    <button class="soc-block cpu active" data-soc="cpu" type="button" aria-pressed="true">CPU + cache</button>
+                    <button class="soc-block dsp" data-soc="dsp" type="button">DSP</button>
+                    <button class="soc-block memory" data-soc="memory" type="button">RAM + ctrl.</button>
+                    <button class="soc-block accel" data-soc="accel" type="button">ASIC / IP</button>
+                    <button class="soc-block analog" data-soc="analog" type="button">Analogique</button>
+                    <button class="soc-block io" data-soc="io" type="button">MEMS / I/O</button>
+                  </div>
+                  <div class="soc-explain" id="soc-explain" aria-live="polite"><strong>CPU :</strong> très programmable, idéal pour le contrôle et les calculs irréguliers, mais moins efficace qu’un accélérateur sur une tâche régulière.</div>
+                </div>
+              </div>
+
+              <div class="deep-dive">
+                <h3>Quatre générations qui racontent l’évolution</h3>
+                <div class="table-scroll">
+                  <table class="compare-table">
+                    <thead><tr><th>SoC</th><th>Usage</th><th>Technologie</th><th>Ce qu’il faut voir</th></tr></thead>
+                    <tbody>
+                      <tr><td>PNX8500 / Viper · 1999</td><td>Set-top box</td><td>35 M transistors · 180 nm</td><td>Deux CPU, vidéo/audio, 2D/3D, E/S : l’hétérogénéité existe déjà.</td></tr>
+                      <tr><td>Cell · 2005</td><td>PlayStation 3</td><td>235 M · 65 nm</td><td>Un PPE + 8 SPE, mémoires locales et DMA : parallélisme explicite.</td></tr>
+                      <tr><td>Kirin 970 · 2017</td><td>Mobile</td><td>5,5 Md · 10 nm · 97 mm²</td><td>8 CPU ARM, GPU, NPU, vidéo, ISP, modem ; 2 TFLOPS annoncés.</td></tr>
+                      <tr><td>Exynos 2500 · 2025</td><td>Mobile</td><td>&gt;19 Md · 3 nm · 137 mm²</td><td>10 CPU ARM + NPU/GPU/vidéo/ISP/modem ; 4 TFLOPS dans le support.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="intuition"><strong>Lecture de la frise</strong>La fréquence n’est plus le moteur unique. La performance vient d’un nombre croissant de blocs parallèles et spécialisés.</p>
+                <div class="accordion">
+                  <details><summary>Le ML2000 : l’hétérogénéité existait déjà à 52 MHz</summary><div>Le SoC mobile associe ARM RISC (protocoles/IHM), DSP OAK (voix et signal), mémoires partagées, timers/PLL/synchronisation, accélérateurs A5 et Viterbi, codecs voix et bande de base, ADC/DAC, modulation GMSK, chaîne RF, Flash/SRAM, SIM, LCD, UART et GPIO. Les blocs génériques sont réutilisés autour de fonctions radio très spécifiques.</div></details>
+                  <details><summary>Projection de complexité montrée dans le support</summary><div>De 2007 à 2022, la projection passe de 32 à 1 435 moteurs de traitement ; taille logique normalisée ≈1→34 et mémoire ≈1→45. L’IRDS 2020 projette aussi davantage de CPU/GPU par appareil mobile ou CPS. Ce sont des tendances prospectives du support, pas des mesures garanties.</div></details>
+                </div>
+              </div>
+              <div class="lesson-source">Diapos 3 à 13 · <a href="../Docs%20Cours/SLE_SoC_intro.pdf#page=4" target="_blank" rel="noopener">Voir à partir de la page 4</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="intro-2" data-lesson="intro-2" data-title="Hétérogénéité, rôles et compromis" data-panel-id="intro">
+            <header class="lesson-head">
+              <span class="lesson-index">1.2</span>
+              <div class="lesson-title-wrap"><h2>Hétérogénéité : le bon moteur pour le bon travail</h2><p>CPU, DSP, IP, analogique et MEMS</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 1.2 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="table-scroll">
+                <table class="compare-table">
+                  <thead><tr><th>Bloc</th><th>Forces</th><th>Faiblesses</th><th>Travail idéal</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>CPU</strong></td><td>Souplesse, contrôle complexe, programmation</td><td>Puissance/énergie modestes sur calcul régulier</td><td>OS, interface utilisateur, gestion, temps réel</td></tr>
+                    <tr><td><strong>DSP</strong></td><td>Datapath et instructions adaptés, puissance moyenne/forte</td><td>Programmation plus complexe</td><td>Audio, télécom, image simple, boucles régulières</td></tr>
+                    <tr><td><strong>ASIC / IP</strong></td><td>Très forte efficacité, faible énergie par opération</td><td>Rigidité, développement long, surface dédiée</td><td>Noyau stable, massif et régulier</td></tr>
+                    <tr><td><strong>Analogique</strong></td><td>Conversion directe, intégration et faible consommation</td><td>Bruit, conception difficile, dépendance au procédé</td><td>ADC/DAC, RF, mise en forme</td></tr>
+                    <tr><td><strong>MEMS / MOEMS</strong></td><td>Interaction physique intégrée</td><td>Très spécifique</td><td>Capteur ou actionneur</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="exam-tip"><strong>Question qui tombe facilement</strong>Comparer CPU, DSP et ASIC sur quatre axes : souplesse, puissance de calcul, énergie, type d’algorithme. Le choix n’est jamais absolu : il dépend de l’application.</div>
+              <div class="deep-dive">
+                <h3>L’espace de conception</h3>
+                <p>Il faut arbitrer simultanément : fonctionnalité, technologie, puissance de calcul, débit, architecture mémoire, consommation, surface/coût, efficacité, souplesse, réutilisabilité et temps de développement.</p>
+                <div class="concept-grid">
+                  <div class="card"><span class="tag">Performance</span><h3>Calcul + débit</h3><p>Une unité rapide ne sert à rien si elle attend les données.</p></div>
+                  <div class="card"><span class="tag gold">Coût</span><h3>Surface + mémoire</h3><p>Dupliquer augmente le parallélisme, mais aussi les mm² et les accès.</p></div>
+                  <div class="card"><span class="tag coral">Énergie</span><h3>Activité + tension</h3><p>La chaleur et l’autonomie imposent une enveloppe maximale.</p></div>
+                  <div class="card"><span class="tag blue">Projet</span><h3>Souplesse + délai</h3><p>L’IP accélère le produit ; la spécialisation améliore son efficacité.</p></div>
+                </div>
+              </div>
+              <div class="lesson-source">Diapos 19 à 21, overlays PDF p. 29–36 · <a href="../Docs%20Cours/SLE_SoC_intro.pdf#page=28" target="_blank" rel="noopener">Voir la source</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="intro-3" data-lesson="intro-3" data-title="Puissance dynamique et leviers d’énergie" data-panel-id="intro">
+            <header class="lesson-head">
+              <span class="lesson-index">1.3</span>
+              <div class="lesson-title-wrap"><h2>Énergie : agir du transistor jusqu’à l’algorithme</h2><p>La tension compte au carré</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 1.3 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <span class="formula">P<span class="sub">dyn</span> = ½ · C<span class="sub">charge</span> · V<span class="sub">dd</span><span class="sup">2</span> · f<span class="sub">transition</span></span>
+              <p>À chaque commutation, le CMOS charge ou décharge une capacité. La puissance dynamique croît linéairement avec la capacité et l’activité, mais <strong>quadratiquement avec la tension</strong>. S’ajoutent le court-circuit pendant les fronts et les fuites.</p>
+
+              <div class="two-col">
+                <div class="simulator">
+                  <div class="simulator-head"><div><h3>Laboratoire de puissance</h3><p>Valeurs normalisées ; observe surtout les rapports.</p></div><span class="tag">Interactif</span></div>
+                  <div class="controls">
+                    <label class="control-row"><span>Capacité C</span><input id="power-c" type="range" min="0.5" max="3" step="0.1" value="1"><output id="power-c-out">1,0</output></label>
+                    <label class="control-row"><span>Tension V</span><input id="power-v" type="range" min="0.5" max="1.5" step="0.05" value="1"><output id="power-v-out">1,00</output></label>
+                    <label class="control-row"><span>Transitions f</span><input id="power-f" type="range" min="0.25" max="2" step="0.05" value="1"><output id="power-f-out">1,00</output></label>
+                  </div>
+                  <div class="big-result"><span>Puissance relative</span><strong id="power-result">1,00 ×</strong></div>
+                </div>
+                <div>
+                  <div class="core-idea"><strong>Test mental</strong>À C et f constants, passer de 1 V à 0,8 V donne 0,8² = <strong>0,64</strong> : environ 36 % de puissance dynamique en moins.</div>
+                  <ul class="clean-list">
+                    <li><strong>Clock gating :</strong> supprime les transitions d’horloge, pas les fuites.</li>
+                    <li><strong>Power gating :</strong> coupe l’alimentation ; réduit les fuites, mais réveille lentement.</li>
+                    <li><strong>DVFS :</strong> ajuste tension et fréquence à la charge.</li>
+                    <li><strong>Spécialisation :</strong> évite le coût d’instructions génériques.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="deep-dive">
+                <h3>Les neuf niveaux de la diapo animée</h3>
+                <div class="accordion">
+                  <details><summary>1 · Technologie — réduire les capacités</summary><div>C<sub>gate</sub> ≈ C<sub>ox</sub>·L·W, avec C<sub>ox</sub> = ε<sub>ox</sub>/t<sub>ox</sub> : la capacité est proportionnelle à la surface de grille. Le support note cette dépendance sous la forme simplifiée C = L·W·ε ; réduire les dimensions et améliorer le procédé diminue la charge, avec un coût industriel croissant.</div></details>
+                  <details><summary>2 · Circuit — équilibrer les transistors</summary><div>Ajuster les rapports W/L raccourcit les transitions. Attention : élargir un transistor améliore sa force mais ajoute de la capacité.</div></details>
+                  <details><summary>3 · Combinatoire — supprimer les glitches</summary><div>Des chemins de propagation déséquilibrés produisent des transitions parasites. Ajouter de la logique peut donc réduire l’énergie malgré un peu plus de surface.</div></details>
+                  <details><summary>4 · Arithmétique — choisir la juste précision</summary><div>Virgule fixe, calcul simplifié ou approché si le critère de qualité le permet. Une précision surdimensionnée coûte surface, temps et énergie.</div></details>
+                  <details><summary>5 · Microarchitecture — SIMD et VLIW</summary><div>SIMD : même opération sur plusieurs données. VLIW : plusieurs opérations, éventuellement différentes, dans un même mot d’instruction.</div></details>
+                  <details><summary>6 · Architecture — paralléliser pour baisser V</summary><div>Dans le modèle idéal, deux unités à f/2 gardent le débit si le travail se parallélise parfaitement et si les surcoûts de communication/synchronisation sont négligeables. La capacité double et la fréquence est divisée par deux ; le gain vient de la tension que la période plus longue autorise à réduire.</div></details>
+                  <details><summary>7 · Système — partitionner logiciel / matériel</summary><div>Confier un noyau régulier à une IP matérielle réduit le décodage, les mouvements génériques et l’énergie par opération.</div></details>
+                  <details><summary>8 · Activité — clock/power gating et DVFS</summary><div>Éteindre les modules inutiles, arrêter leur horloge, abaisser fréquence et tension ; gérer aussi l’état et la latence de réveil.</div></details>
+                  <details><summary>9 · Mémoire — placer et réutiliser les données</summary><div>Cache, scratchpad, SRAM/DRAM internes et DDR externe n’ont pas le même coût. Le déplacement des données peut dominer le calcul.</div></details>
+                </div>
+              </div>
+              <div class="lesson-source">Diapos 15 à 17, overlays PDF p. 18–26 · <a href="../Docs%20Cours/SLE_SoC_intro.pdf#page=16" target="_blank" rel="noopener">Voir la formule</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="intro-4" data-lesson="intro-4" data-title="Parallélisme, densité, fils, Memory Wall, tolérance aux fautes et thermique" data-panel-id="intro">
+            <header class="lesson-head">
+              <span class="lesson-index">1.4</span>
+              <div class="lesson-title-wrap"><h2>Les principaux enjeux du multicœur</h2><p>Parallélisme logiciel, fils, mémoire, fiabilité et chaleur</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 1.4 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <p>La fréquence des cœurs plafonne : on ajoute donc des unités et on parallélise. Mais la densité disponible n’est exploitable que si l’ensemble du système suit.</p>
+              <div class="concept-grid">
+                <div class="card"><span class="tag coral">Enjeu 1</span><h3>Application</h3><p>Le travail doit être divisible, synchronisable et équilibré entre les cœurs.</p></div>
+                <div class="card"><span class="tag blue">Enjeu 2</span><h3>Interconnexions</h3><p>Le délai RC des fils devient dominant ; placement et communications locales deviennent critiques.</p></div>
+                <div class="card"><span class="tag gold">Enjeu 3</span><h3>Memory Wall</h3><p>Le calcul progresse bien plus vite que latence et bande passante mémoire.</p></div>
+                <div class="card"><span class="tag">Enjeu 4</span><h3>Thermique</h3><p>La puissance totale et les points chauds limitent l’activité simultanée.</p></div>
+              </div>
+              <div class="warning"><strong>Fiabilité — autre enjeu explicite du support</strong>Avec davantage d’unités, le système doit aussi tolérer les fautes et les pannes : il faut pouvoir les détecter, les contenir et, selon les exigences, poursuivre ou restaurer le service.</div>
+
+              <div class="two-col deep-dive">
+                <div>
+                  <h3>La densité explose</h3>
+                  <table class="compare-table"><thead><tr><th>Nœud</th><th>Année</th><th>Densité</th></tr></thead><tbody><tr><td>90 nm</td><td>2003</td><td>1 MTr/mm²</td></tr><tr><td>40 nm</td><td>2007</td><td>4 MTr/mm²</td></tr><tr><td>20 nm</td><td>2012</td><td>16,5 MTr/mm²</td></tr><tr><td>5 nm</td><td>2020</td><td>130 MTr/mm²</td></tr><tr><td>3 nm</td><td>2023</td><td>224 MTr/mm²</td></tr></tbody></table>
+                  <p>Un RISC MIPS 32 bits simple vaut environ 30 000 portes : le problème n’est plus seulement de pouvoir intégrer du calcul.</p>
+                </div>
+                <div>
+                  <h3>La mémoire ne suit pas</h3>
+                  <table class="compare-table"><thead><tr><th>Mémoire</th><th>Débit par fil</th></tr></thead><tbody><tr><td>DDR2 · 2003</td><td>0,4 Gbit/s</td></tr><tr><td>DDR3 · 2008</td><td>1,6 Gbit/s</td></tr><tr><td>DDR4 · 2014</td><td>3,2 Gbit/s</td></tr><tr><td>DDR5 · 2020</td><td>6 Gbit/s</td></tr></tbody></table>
+                  <p>Sur 20 ans : densité de portes ×200, débit par fil ×15, latence externe ≈ 14 ns. D’où hiérarchie, réutilisation et transferts par paquets.</p>
+                </div>
+              </div>
+              <div class="deep-dive two-col">
+                <div class="card"><span class="tag blue">Design gap</span><h3>Pouvoir intégrer ≠ pouvoir concevoir</h3><p>Le graphe 1981–2017 indique une capacité technologique doublant ≈ tous les 36 mois, mais une productivité matérielle plus lente. Le logiciel requis doublerait ≈ tous les 10 mois, tandis que sa productivité ne doublerait qu’en ≈5 ans : réutilisation d’IP, abstraction et automatisation deviennent indispensables.</p></div>
+                <div class="card"><span class="tag coral">Exemple thermique</span><h3>La chaleur est locale</h3><p>L’IBM Power4 dual-core est donné à 115 W. La carte ≈67–82 °C montre des hotspots autour des unités load/store et de la logique L2 : activité et floorplan comptent autant que la puissance totale.</p></div>
+              </div>
+              <div class="warning"><strong>Unités à ne pas mélanger</strong>Le support compare le débit <em>par fil</em> en Gbit/s au débit agrégé d’une interface (ex. Kirin 970 : 27,8 GiB/s). Ce ne sont pas les mêmes grandeurs.</div>
+              <div class="lesson-source">Diapos 22 à 27 · <a href="../Docs%20Cours/SLE_SoC_intro.pdf#page=38" target="_blank" rel="noopener">Voir les enjeux multicœurs</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="intro-5" data-lesson="intro-5" data-title="Méthodologie top-down bottom-up et niveaux de modèles" data-panel-id="intro">
+            <header class="lesson-head">
+              <span class="lesson-index">1.5</span>
+              <div class="lesson-title-wrap"><h2>Concevoir : explorer tôt, raffiner ensuite</h2><p>Top-down, bottom-up, vérification et modèles</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 1.5 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="two-col">
+                <div class="card"><span class="tag">Top-down</span><h3>Du besoin au silicium</h3><p>Partir abstrait, choisir l’algorithme et l’architecture, puis ajouter progressivement les détails de réalisation.</p></div>
+                <div class="card"><span class="tag blue">Bottom-up</span><h3>Des briques au système</h3><p>Assembler et configurer processeurs, mémoires, bus et IP existants. Un projet réel combine les deux approches.</p></div>
+              </div>
+              <div class="pipeline-strip" aria-label="Flot top-down">
+                <div class="pipeline-block"><strong>Besoins</strong><small>mission, contraintes</small></div>
+                <div class="pipeline-block"><strong>Spécification</strong><small>produit puis algorithme</small></div>
+                <div class="pipeline-block"><strong>Architecture</strong><small>partition HW / SW</small></div>
+                <div class="pipeline-block"><strong>Réalisation</strong><small>OS/app · RTL</small></div>
+                <div class="pipeline-block"><strong>Implantation</strong><small>synthèse, P&amp;R</small></div>
+                <div class="pipeline-block"><strong>Production</strong><small>avec vérification continue</small></div>
+              </div>
+              <div class="core-idea"><strong>Décider tôt</strong>Au haut niveau, beaucoup d’alternatives sont encore disponibles et les modèles coûtent peu. En RTL/netlist, les estimations sont précises mais une erreur algorithmique est très chère à corriger.</div>
+
+              <div class="table-scroll deep-dive">
+                <table class="compare-table">
+                  <thead><tr><th>Modèle</th><th>Ce qu’il apporte</th><th>Précision physique</th></tr></thead>
+                  <tbody><tr><td>C / Matlab</td><td>Fonction exécutable, exploration rapide</td><td>Très faible</td></tr><tr><td>ESTEREL / SystemC / VHDL comportemental</td><td>Dans la classification du support : fonction + abstraction temporelle synchrone</td><td>Faible, selon le modèle construit</td></tr><tr><td>VHDL RTL</td><td>Combinatoire, séquence, activité</td><td>Moyenne</td></tr><tr><td>Netlist</td><td>Portes, délais et surface</td><td>Forte</td></tr><tr><td>Netlist annotée / layout</td><td>Délais et géométrie réalistes</td><td>Très forte</td></tr><tr><td>HSPICE</td><td>Simulation électrique continue d’un bloc au niveau circuit/transistor</td><td>Très forte localement, coût prohibitif à l’échelle d’un SoC</td></tr></tbody>
+                </table>
+                <p class="intuition"><strong>Nuance</strong>SystemC et le VHDL comportemental ne sont pas intrinsèquement limités à un seul modèle de temps ; la ligne reprend l’usage retenu dans le support. La précision d’HSPICE concerne un bloc électrique détaillé, pas une simulation exhaustive du SoC entier.</p>
+              </div>
+              <div class="exam-tip"><strong>À formuler dans une copie</strong>Les contraintes matérielles doivent influencer l’algorithme dès le départ : une optimisation tardive ne supprime pas sa complexité intrinsèque.</div>
+              <div class="lesson-source">Diapos 29 à 32 · <a href="../Docs%20Cours/SLE_SoC_intro.pdf#page=45" target="_blank" rel="noopener">Voir la méthodologie</a></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="course-panel" id="panel-infra" data-panel="infra">
+          <div class="panel-hero infra-hero">
+            <p class="eyebrow">Chapitre 02 · SLE_SoC_infrastructure</p>
+            <h1>Communiquer sans transformer la puce en embouteillage</h1>
+            <p class="lead">Adresser le bon esclave, choisir un maître, amortir l’arbitrage, déplacer des blocs et retrouver chaque réponse : toute l’infrastructure découle de ces problèmes.</p>
+            <div class="hero-actions"><button class="btn" data-scroll="infra-1" type="button">Démarrer la leçon</button><a class="btn secondary" href="../Docs%20Cours/SLE_SoC_infrastructure.pdf" target="_blank" rel="noopener">Support original ↗</a></div>
+          </div>
+
+          <div class="source-banner"><span>Source principale : <strong>S. Mancini — Infrastructure de communication</strong></span><a href="../Docs%20Cours/SLE_SoC_infrastructure.pdf" target="_blank" rel="noopener">Ouvrir les 96 pages ↗</a></div>
+          <div class="focus-only core-idea"><strong>Fil rouge</strong>Le décodeur répond « quel esclave ? », l’arbitre « quel maître ? », le protocole « quand ? », et l’ID « à quelle requête appartient la réponse ? ».</div>
+
+          <article class="lesson searchable" id="infra-1" data-lesson="infra-1" data-title="Anatomie du bus, maîtres, esclaves et memory-mapped I/O" data-panel-id="infra">
+            <header class="lesson-head">
+              <span class="lesson-index">2.1</span>
+              <div class="lesson-title-wrap"><h2>Anatomie d’une transaction</h2><p>Maître, esclave, arbitre, décodeur</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 2.1 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="core-idea"><strong>Rôles, pas directions</strong>Le <em>maître</em> initie une transaction ; l’<em>esclave</em> répond. Une RAM source de données reste esclave si c’est le DMA qui a initié la lecture.</div>
+              <div class="two-col">
+                <div>
+                  <h3>Les acteurs</h3>
+                  <ul class="clean-list">
+                    <li><strong>Bus d’adresse :</strong> où lire ou écrire.</li>
+                    <li><strong>Bus de données :</strong> charge utile, potentiellement bidirectionnelle.</li>
+                    <li><strong>Contrôle :</strong> sens, taille, type, validité, réponse.</li>
+                    <li><strong>Arbitre :</strong> accorde l’infrastructure à un demandeur.</li>
+                    <li><strong>Décodeur :</strong> transforme l’adresse en sélection d’esclave.</li>
+                  </ul>
+                </div>
+                <div class="card">
+                  <span class="tag blue">Question réflexe</span>
+                  <h3>Deux questions différentes</h3>
+                  <p><strong>Conflit de maîtres :</strong> l’arbitre décide qui parle.<br><strong>Choix du périphérique :</strong> le décodeur décide qui écoute.</p>
+                </div>
+              </div>
+
+              <h3>Exemple CPU ↔ accélérateur</h3>
+              <div class="pipeline-strip" aria-label="Étapes d’une transaction CPU vers IP">
+                <div class="pipeline-block"><strong>1 · Préparer</strong><small>adresse, R/W, donnée</small></div>
+                <div class="pipeline-block"><strong>2 · Requête</strong><small>le CPU demande le bus</small></div>
+                <div class="pipeline-block"><strong>3 · Grant</strong><small>l’arbitre acquitte</small></div>
+                <div class="pipeline-block"><strong>4 · Décoder</strong><small>IP puis registre</small></div>
+                <div class="pipeline-block"><strong>5 · Transférer</strong><small>écrire b ou lire r0</small></div>
+                <div class="pipeline-block"><strong>6 · Terminer</strong><small>repos ou interruption</small></div>
+              </div>
+              <p>L’IP expose des registres <code>a</code>, <code>b</code>, <code>c</code>, <code>r0</code>, <code>r1</code> dans la <em>memory map</em> (dans le dessin : <code>a = base</code>, <code>b = base+4</code>, <code>r0 = base+24</code>). Le CPU la pilote avec des lectures/écritures ordinaires ; une interruption signale la fin du calcul.</p>
+              <div class="warning"><strong>À ne pas oublier</strong>Les bits hauts de l’adresse sélectionnent typiquement l’IP ; les bits bas, son registre interne. Un registre de périphérique peut avoir un effet de bord, contrairement à une RAM ordinaire.</div>
+              <div class="lesson-source">Diapos 2 à 6, animation PDF p. 9–21 · <a href="../Docs%20Cours/SLE_SoC_infrastructure.pdf#page=3" target="_blank" rel="noopener">Voir la construction</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="infra-2" data-lesson="infra-2" data-title="Bus partagé, crossbar, NoC, arbitrage, round-robin et burst" data-panel-id="infra">
+            <header class="lesson-head">
+              <span class="lesson-index">2.2</span>
+              <div class="lesson-title-wrap"><h2>Topologies et arbitrage</h2><p>Partager peu de fils ou multiplier les chemins</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 2.2 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="table-scroll">
+                <table class="compare-table">
+                  <thead><tr><th>Organisation</th><th>Principe</th><th>Avantages</th><th>Limites</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>Bus trois états</strong></td><td>Fils partagés, un conducteur actif</td><td>Modulaire, simple, observable</td><td>Faible fréquence, longues connexions, test/layout difficiles</td></tr>
+                    <tr><td><strong>Crossbar</strong></td><td>Un chemin/mux par destination</td><td>Accès simultanés, fréquence élevée</td><td>Beaucoup de fils, coûteux et peu modulaire</td></tr>
+                    <tr><td><strong>NoC</strong></td><td>Liens point à point + routeurs</td><td>Parallélisme, fréquence, extensibilité</td><td>Routage, buffers et contrôleurs complexes</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="intuition"><strong>Nuance</strong>Un crossbar autorise plusieurs transferts si les destinations diffèrent. Deux maîtres visant le même esclave sont encore en conflit. Un NoC remplace un gros arbitrage global par plusieurs arbitrages locaux.</p>
+
+              <div class="two-col">
+                <div class="simulator">
+                  <div class="simulator-head"><div><h3>Arbitre trois maîtres</h3><p>Active les requêtes puis compare les politiques.</p></div><span class="tag">Interactif</span></div>
+                  <div class="request-controls">
+                    <button class="toggle-chip" data-request="0" type="button">r0</button>
+                    <button class="toggle-chip" data-request="1" type="button">r1</button>
+                    <button class="toggle-chip" data-request="2" type="button">r2</button>
+                    <select id="arb-policy" aria-label="Politique d’arbitrage"><option value="fixed">Priorité fixe</option><option value="round">Round-robin</option></select>
+                    <button class="btn ghost" id="arb-next" type="button">Cycle suivant</button>
+                  </div>
+                  <div class="bus-stage" aria-live="polite">
+                    <div class="bus-line"></div>
+                    <div class="bus-node m0" data-master="0">Maître 0<br><small>prio forte</small></div>
+                    <div class="bus-node m1" data-master="1">Maître 1</div>
+                    <div class="bus-node m2" data-master="2">Maître 2</div>
+                    <div class="bus-node slave">Esclave</div>
+                  </div>
+                  <div class="big-result"><span>Décision</span><strong id="arb-result">Aucune requête</strong></div>
+                </div>
+                <div>
+                  <h3>Politiques</h3>
+                  <ul class="clean-list">
+                    <li><strong>Fixe :</strong> latence minimale pour le prioritaire, famine possible.</li>
+                    <li><strong>Round-robin :</strong> priorité tournante, équité si les transactions finissent.</li>
+                    <li><strong>TDMA :</strong> créneaux fixes, prédictible mais parfois sous-utilisé.</li>
+                    <li><strong>Dynamique :</strong> QoS souple, logique plus longue.</li>
+                  </ul>
+                  <span class="formula">s<span class="sub">j</span> = e<span class="sub">j</span> ∧ ¬(e<span class="sub">0</span> ∨ … ∨ e<span class="sub">j−1</span>)</span>
+                  <p>Un encodeur de priorité naïf est une chaîne de profondeur O(m). Un round-robin ajoute rotation, priorité fixe, rotation inverse et un pointeur mémorisé.</p>
+                </div>
+              </div>
+
+              <div class="simulator deep-dive">
+                <div class="simulator-head"><div><h3>Pourquoi les bursts ?</h3><p>Un arbitrage pour plusieurs mots.</p></div></div>
+                <div class="two-col">
+                  <div class="controls">
+                    <label class="control-row"><span>Arbitrage A</span><input id="burst-a" type="range" min="1" max="10" value="3"><output id="burst-a-out">3 cyc.</output></label>
+                    <label class="control-row"><span>Longueur L</span><input id="burst-l" type="range" min="1" max="32" value="8"><output id="burst-l-out">8 mots</output></label>
+                  </div>
+                  <div class="big-result"><span>Rendement L / (A + L)</span><strong id="burst-result">72,7 %</strong></div>
+                </div>
+                <span class="formula">T = A + L   ·   η = L/(A+L)   ·   coût/mot = 1 + A/L</span>
+                <p><strong>Modèle pédagogique simplifié :</strong> A représente les cycles d’arbitrage, puis L mots sont transférés à raison d’un mot par cycle, sans attente ni latence supplémentaire. En pratique, états d’attente, latence mémoire et protocole modifient T et η.</p>
+                <p>Allonger le burst amortit l’arbitrage, mais monopolise plus longtemps le chemin et réduit la préemptabilité.</p>
+              </div>
+              <div class="lesson-source">Diapos 8 à 16 · <a href="../Docs%20Cours/SLE_SoC_infrastructure.pdf#page=23" target="_blank" rel="noopener">Voir les topologies</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="infra-3" data-lesson="infra-3" data-title="Adressage, bridges, interblocage et DMA" data-panel-id="infra">
+            <header class="lesson-head">
+              <span class="lesson-index">2.3</span>
+              <div class="lesson-title-wrap"><h2>Topologie, deadlock et DMA</h2><p>Découpler le contrôle du déplacement massif</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 2.3 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="three-col">
+                <div class="card"><span class="tag">Memory map</span><h3>Adresse = bloc + offset</h3><p>Un décodeur global choisit le composant ; son décodeur local choisit registre, FIFO ou RAM.</p></div>
+                <div class="card"><span class="tag blue">Bridge</span><h3>S en amont, M en aval</h3><p>Il convertit protocole, largeur ou horloge et peut tamponner pour découpler les bus.</p></div>
+                <div class="card"><span class="tag coral">Deadlock</span><h3>Cycle d’attente</h3><p>Dépendance circulaire + ressources non préemptables = plus aucune progression.</p></div>
+              </div>
+              <div class="warning"><strong>Précision importante</strong>Des demandes simultanées ne suffisent pas à produire un interblocage. Il faut une attente circulaire non préemptable. Prévenir : ordre d’acquisition, buffers, topologie. Guérir : détecter puis préempter/annuler.</div>
+
+              <div class="section-heading"><div><p class="eyebrow">Animation du support</p><h2>Le DMA en six étapes</h2></div></div>
+              <div class="pipeline-strip" id="dma-strip" aria-label="Séquence DMA">
+                <div class="pipeline-block"><strong>Configurer</strong><small>CPU → registres DMA</small></div>
+                <div class="pipeline-block"><strong>Lire</strong><small>burst depuis source</small></div>
+                <div class="pipeline-block"><strong>Tamponner</strong><small>FIFO interne</small></div>
+                <div class="pipeline-block"><strong>Écrire</strong><small>burst vers destination</small></div>
+                <div class="pipeline-block"><strong>Répéter ×n</strong><small>auto-incrément</small></div>
+                <div class="pipeline-block"><strong>Interrompre</strong><small>fin ou erreur</small></div>
+              </div>
+              <div class="core-idea"><strong>Double personnalité du DMA</strong>Il est <em>esclave</em> quand le CPU configure ses registres, puis <em>maître</em> quand il lance les lectures et écritures. Le CPU paie la configuration et l’interruption, pas chaque mot transféré.</div>
+              <div class="deep-dive two-col">
+                <div>
+                  <h3>Caractéristiques d’un DMA</h3>
+                  <ul class="clean-list"><li>nombre et priorité des canaux ;</li><li>transferts groupés (bursts), auto-incrémentés et canaux/transferts chaînés ;</li><li>taille des données et tampon FIFO ;</li><li>interruptions de fin et d’erreur.</li></ul>
+                </div>
+                <div>
+                  <h3>Multiprocesseur</h3>
+                  <p><strong>Mémoire partagée :</strong> tous les CPU voient la même RAM. <strong>Mémoire distribuée :</strong> chaque CPU possède une RAM locale ; bridges ou blocs de transfert relient les espaces.</p>
+                  <p>Une IP commune doit être visible dans tous les espaces d’adressage qui veulent l’utiliser.</p>
+                </div>
+              </div>
+              <div class="lesson-source">Diapos 18 à 28, DMA animé PDF p. 37–43 · <a href="../Docs%20Cours/SLE_SoC_infrastructure.pdf#page=33" target="_blank" rel="noopener">Voir l’infrastructure</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="infra-4" data-lesson="infra-4" data-title="CoreConnect PLB OPB DCR et AMBA AHB" data-panel-id="infra">
+            <header class="lesson-head">
+              <span class="lesson-index">2.4</span>
+              <div class="lesson-title-wrap"><h2>Bus industriels : CoreConnect et AMBA AHB</h2><p>Hiérarchiser performance et périphériques</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 2.4 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="two-col">
+                <div class="card">
+                  <span class="tag blue">IBM CoreConnect</span>
+                  <h3>Trois niveaux</h3>
+                  <ul class="clean-list"><li><strong>PLB :</strong> bus processeur haute performance, 128 bits dans l’exemple PPC440.</li><li><strong>OPB :</strong> périphériques, 32 bits dans l’exemple.</li><li><strong>DCR :</strong> registres de configuration/état.</li></ul>
+                  <p>Un bridge PLB↔OPB relie les mondes. L’arbitre PLB gère 8 ou 16 maîtres et autant de jeux de priorités sélectionnables dynamiquement. Ces jeux sont distincts des deux modes d’arbitrage proposés : <em>fixed</em> et <em>fair</em>.</p>
+                </div>
+                <div class="card">
+                  <span class="tag coral">ARM AMBA AHB</span>
+                  <h3>Bus rapide + APB simple</h3>
+                  <p>AHB/ASB relie CPU, RAM, mémoire externe et DMA. Un bridge dessert APB pour les périphériques simples.</p>
+                  <p>Des multiplexeurs choisissent le maître, le décodeur sélectionne l’esclave, puis <code>HRDATA</code>/<code>HRESP</code> reviennent.</p>
+                </div>
+              </div>
+              <div class="deep-dive">
+                <h3>Un vrai protocole transporte bien plus qu’A + D</h3>
+                <div class="concept-grid">
+                  <div class="card"><strong>Transaction</strong><p>adresse, R/W, taille, byte enables, type</p></div>
+                  <div class="card"><strong>Paquets</strong><p>burst, dernier mot, terminaison</p></div>
+                  <div class="card"><strong>Système</strong><p>protection, cache, ordre, lock</p></div>
+                  <div class="card"><strong>Robustesse</strong><p>wait, ready, erreur, ré-arbitrage</p></div>
+                </div>
+                <p>Le PLB pipeline la phase d’adresse avec les phases de données de transactions antérieures : meilleur débit, mais obligation de conserver l’association requête ↔ réponse.</p>
+                <h3>Protection AHB : HPROT</h3>
+                <table class="compare-table"><thead><tr><th>Bit</th><th>0</th><th>1</th></tr></thead><tbody><tr><td>HPROT[0]</td><td>instruction</td><td>donnée</td></tr><tr><td>HPROT[1]</td><td>utilisateur</td><td>privilégié</td></tr><tr><td>HPROT[2]</td><td>non bufferable</td><td>bufferable</td></tr><tr><td>HPROT[3]</td><td>non cacheable</td><td>cacheable</td></tr></tbody></table>
+              </div>
+              <div class="exam-tip"><strong>Dessin attendu</strong>Pour AHB : requêtes → arbitre → mux maître → adresse/contrôle diffusés → décodeur → sélection esclave → mux de retour. AMBA ne fixe pas la politique d’arbitrage.</div>
+              <div class="lesson-source">Diapos 30 à 46 · <a href="../Docs%20Cours/SLE_SoC_infrastructure.pdf#page=52" target="_blank" rel="noopener">Voir CoreConnect</a> · <a href="../Docs%20Cours/SLE_SoC_infrastructure.pdf#page=61" target="_blank" rel="noopener">Voir AHB</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="infra-5" data-lesson="infra-5" data-title="AMBA AXI, cinq canaux, VALID READY, ID et sémaphore" data-panel-id="infra">
+            <header class="lesson-head">
+              <span class="lesson-index">2.5</span>
+              <div class="lesson-title-wrap"><h2>AXI : découpler pour faire circuler en parallèle</h2><p>Cinq canaux, handshakes et identifiants</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 2.5 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="core-idea"><strong>Le changement de modèle</strong>AXI utilise des liens point à point et des routeurs. Adresse, donnée et réponse voyagent sur des canaux indépendants ; plusieurs transactions peuvent être en vol.</div>
+              <div class="two-col">
+                <div class="simulator">
+                  <div class="simulator-head"><div><h3>Les cinq canaux AXI</h3><p>Choisis une transaction et regarde les sens.</p></div><span class="tag">Animé</span></div>
+                  <div class="request-controls"><button class="toggle-chip on" data-axi-mode="read" type="button">Lecture</button><button class="toggle-chip" data-axi-mode="write" type="button">Écriture</button></div>
+                  <div class="axi-visual">
+                    <div class="axi-endpoint">Maître</div>
+                    <div class="axi-channels">
+                      <div class="axi-channel active" data-axi="ar">AR · adresse lecture <span class="axi-token"></span></div>
+                      <div class="axi-channel reverse active" data-axi="r">R · données lecture <span class="axi-token"></span></div>
+                      <div class="axi-channel" data-axi="aw">AW · adresse écriture <span class="axi-token"></span></div>
+                      <div class="axi-channel" data-axi="w">W · données écriture <span class="axi-token"></span></div>
+                      <div class="axi-channel reverse" data-axi="b">B · réponse écriture <span class="axi-token"></span></div>
+                    </div>
+                    <div class="axi-endpoint">Esclave</div>
+                  </div>
+                  <p class="intuition"><strong>Légende</strong>AR, AW et W vont du maître vers l’esclave ; R et B reviennent de l’esclave vers le maître. Cette vue indique la direction logique des canaux, pas un chronogramme ni un ordre d’émission : chaque canal possède son propre handshake VALID/READY, et AW et W sont indépendants.</p>
+                </div>
+                <div>
+                  <span class="formula">transfert accepté ⇔ VALID = 1 ∧ READY = 1</span>
+                  <p>La source pose <code>VALID</code> avec une charge utile stable ; le destinataire pose <code>READY</code> lorsqu’il peut l’accepter. Le battement n’existe qu’au front où les deux sont vrais.</p>
+                  <ul class="clean-list"><li><code>ARID</code>, <code>ARADDR</code>, <code>ARLEN</code>, <code>ARSIZE</code>, <code>ARBURST</code></li><li><code>RID</code>, <code>RDATA</code>, <code>RRESP</code>, <code>RLAST</code></li><li>Compléments : cache, protection, QoS, région, utilisateur.</li></ul>
+                </div>
+              </div>
+
+              <div class="deep-dive">
+                <h3>L’ID est le fil d’Ariane</h3>
+                <ul class="clean-list"><li>Dans un même domaine d’ordre — notamment même ID, même direction et même destination — les transactions conservent l’ordre requis.</li><li>Le même ID ne crée pas un ordre global entre lectures et écritures ni entre destinations indépendantes.</li><li>Des ID différents peuvent être traités et recevoir une réponse dans le désordre si l’esclave et l’interconnexion le permettent.</li><li>L’esclave recopie l’ID dans la réponse ; le maître redistribue au bon contexte.</li><li>À une convergence, un switch préfixe l’ID local par son numéro de port : pour N entrées, au moins ⌈log₂N⌉ bits.</li></ul>
+                <div class="warning"><strong>Collision</strong>Deux maîtres peuvent choisir le même ID local. Sans préfixe du switch, les réponses seraient ambiguës. La largeur d’ID croît le long d’une hiérarchie de routeurs.</div>
+                <h3>Pourquoi ne pas verrouiller tout le NoC ?</h3>
+                <p>Un verrou global propagerait le blocage à travers le réseau. Le cours déplace la synchronisation vers une IP sémaphore. Un champ de transaction peut encore qualifier un accès exclusif : ce n’est pas un verrou qui monopolise toute l’interconnexion.</p>
+                <pre class="formula" style="text-align:left">store32(SEM, mon_ID)     // ID sur 12 bits faibles
+lu = load32(SEM)
+if (lu == mon_ID) {
+    section_critique_courte()
+    store32(SEM, 0)       // libérer
+} else { réessayer_plus_tard() }</pre>
+                <p>L’atomicité est à l’intérieur de l’IP : avec une RAM « dernier écrivain gagne », les deux CPU pourraient croire à tort avoir acquis la ressource.</p>
+                <h3>Lire l’exemple Zynq</h3>
+                <p>Le Processing System montré contient 2 Cortex-A9 avec FPU/NEON/MMU, 32 Kio I + 32 Kio D par cœur, L2 512 Kio, OCM 256 Kio, contrôleur DDR et DMA 8 canaux. Vers la logique programmable :</p>
+                <ul class="clean-list"><li><code>M_AXI_GP</code> : le PS initie vers des esclaves PL ;</li><li><code>S_AXI_GP</code> : un maître PL vise le PS ;</li><li><code>S_AXI_HP</code> : quatre ports haut débit vers DDR/OCM ;</li><li><code>ACP</code> : chemin cohérent avec les caches.</li></ul>
+                <p>Le préfixe M/S se lit du point de vue du bloc qui porte le port : <code>S00_AXI</code> d’un interconnect reçoit donc le port maître du processeur.</p>
+              </div>
+              <div class="exam-tip"><strong>Bilan AXI</strong>Arbitrages locaux, moins de blocages, domaines d’horloge indépendants ; en échange, routeurs, files, ID, réordonnancement et correction de la topologie coûtent du matériel.</div>
+              <div class="lesson-source">Diapos 48 à 69 · <a href="../Docs%20Cours/SLE_SoC_infrastructure.pdf#page=70" target="_blank" rel="noopener">Voir AXI</a> · <a href="../Docs%20Cours/SLE_SoC_infrastructure.pdf#page=87" target="_blank" rel="noopener">Voir le sémaphore</a></div>
+            </div>
+          </article>
+        </section>
+        <section class="course-panel" id="panel-memory" data-panel="memory">
+          <div class="panel-hero memory-hero">
+            <p class="eyebrow">Chapitre 03 · SoC_memoire</p>
+            <h1>La mémoire : là où se gagne la performance réelle</h1>
+            <p class="lead">Calculer vite ne suffit pas. Il faut placer les données au bon niveau, exploiter les accès contigus et réutiliser chaque octet avant de le renvoyer vers la mémoire lente.</p>
+            <div class="hero-actions"><button class="btn" data-scroll="memory-1" type="button">Démarrer la leçon</button><a class="btn secondary" href="../Docs%20Cours/SoC_memoire.pdf" target="_blank" rel="noopener">Support original ↗</a></div>
+          </div>
+
+          <div class="source-banner"><span>Source principale : <strong>S. Mancini — Architecture mémoire</strong></span><a href="../Docs%20Cours/SoC_memoire.pdf" target="_blank" rel="noopener">Ouvrir les 67 pages ↗</a></div>
+          <div class="focus-only core-idea"><strong>Fil rouge</strong>La bonne architecture mémoire est celle qui épouse l’ordre des boucles et transforme des accès isolés en réutilisations locales et en bursts.</div>
+
+          <article class="lesson searchable" id="memory-1" data-lesson="memory-1" data-title="Technologies mémoire SRAM DRAM SDRAM ROM Flash registres" data-panel-id="memory">
+            <header class="lesson-head">
+              <span class="lesson-index">3.1</span>
+              <div class="lesson-title-wrap"><h2>Du bit au banc mémoire</h2><p>Densité, vitesse, persistance et accès</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 3.1 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <p>Une mémoire est un tableau de points mémoire : un décodeur active une <strong>ligne de mot</strong>, puis les lignes de bit transportent les données. La technologie du point fixe la densité, la vitesse et l’énergie.</p>
+              <div class="table-scroll">
+                <table class="compare-table">
+                  <thead><tr><th>Type</th><th>Cellule / propriété</th><th>Atouts</th><th>Limites / usage</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>Registre</strong></td><td>Bascules logiques</td><td>Le plus rapide, synthétisable</td><td>Surface très élevée ; quelques Ko</td></tr>
+                    <tr><td><strong>SRAM</strong></td><td>6 transistors</td><td>Rapide, procédé CMOS standard</td><td>Faible densité, macro dédiée ; ≈ centaines de Ko</td></tr>
+                    <tr><td><strong>DRAM / SDRAM</strong></td><td>1 transistor + 1 condensateur</td><td>Grande densité, coût/bit faible</td><td>Latence, rafraîchissement, interface complexe ; jusqu’aux Go</td></tr>
+                    <tr><td><strong>ROM</strong></td><td>Connexion câblée</td><td>Petite, rapide</td><td>Lecture seule</td></tr>
+                    <tr><td><strong>Flash</strong></td><td>Transistor à grille flottante</td><td>Non volatile, programmable in situ</td><td>Accès/effacement lents et séquence complexe</td></tr>
+                    <tr><td><strong>Associative</strong></td><td>Recherche par contenu</td><td>Comparaison parallèle</td><td>Coûteuse ; tags de cache/TLB</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="core-idea"><strong>SRAM vs SDRAM</strong>La SRAM conserve son état tant qu’elle est alimentée. La DRAM stocke une charge qui fuit : il faut la relire/régénérer périodiquement. SDRAM signifie que l’interface est synchrone, pas que la cellule devient statique.</div>
+
+              <div class="deep-dive">
+                <h3>Organisation physique</h3>
+                <p>Les contraintes de fabrication découpent le tableau en bancs, lignes et colonnes. Une ligne activée forme une <strong>page</strong> ; les colonnes sélectionnent ensuite les mots. Exemple SMJ626162 du support : 16 Mbit, 2 bancs, 2 048 lignes (11 bits), 256 colonnes × 8 bits, mot de 16 bits, page de 512 octets.</p>
+                <p>Une RAM multiport autorise plusieurs lectures/écritures simultanées. Elle coûte davantage et l’utilisateur doit définir les collisions, par exemple lecture et écriture à la même adresse.</p>
+                <h3>Ordres de grandeur de densité cités</h3>
+                <ul class="clean-list"><li>DRAM dédiée Micron D1α 14 nm (2020) : 0,0031 mm²/Mbit.</li><li>90 nm mixte (2004) : SRAM 1,2–1,6 mm²/Mbit ; DRAM 0,5 mm²/Mbit.</li><li>14 nm mixte (2014) : SRAM 0,067–0,083 mm²/Mbit ; eDRAM 0,018 mm²/Mbit.</li></ul>
+              </div>
+              <div class="lesson-source">Diapos 2 à 10 et 19 à 23 · <a href="../Docs%20Cours/SoC_memoire.pdf#page=3" target="_blank" rel="noopener">Voir l’impact mémoire</a> · <a href="../Docs%20Cours/SoC_memoire.pdf#page=9" target="_blank" rel="noopener">Voir SRAM</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="memory-2" data-lesson="memory-2" data-title="SDRAM activation ligne colonne burst latence rafraîchissement DDR" data-panel-id="memory">
+            <header class="lesson-head">
+              <span class="lesson-index">3.2</span>
+              <div class="lesson-title-wrap"><h2>SDRAM : payer la ligne, rentabiliser la page</h2><p>ACT, colonne, latence, burst, précharge</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 3.2 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="two-col">
+                <div class="simulator">
+                  <div class="simulator-head"><div><h3>Accès SDRAM pas à pas</h3><p>Ouvre R2, lit C2 à C5, puis précharge le banc.</p></div><span class="tag">Animé</span></div>
+                  <div class="sdram-grid" id="sdram-grid" aria-label="Matrice SDRAM"></div>
+                  <div class="dram-steps"><div class="dram-step active" data-dram-step="0">1 · ACT / RAS · R2</div><div class="dram-step" data-dram-step="1">2 · READ / CAS · C2</div><div class="dram-step" data-dram-step="2">3 · ATTENTE · CL</div><div class="dram-step" data-dram-step="3">4 · DONNÉES · C2–C5</div><div class="dram-step" data-dram-step="4">5 · PRECHARGE · tRP</div></div>
+                  <div class="request-controls"><button class="btn" id="dram-next" type="button">Étape suivante</button><button class="btn ghost" id="dram-auto" type="button">Lecture auto</button></div>
+                </div>
+                <div>
+                  <ol class="clean-list">
+                    <li><strong>ACT / RAS — R2 :</strong> placer l’adresse de ligne et ouvrir la page du banc.</li>
+                    <li><strong>READ / CAS — C2 :</strong> fournir la colonne après le délai tRCD.</li>
+                    <li><strong>CAS latency (CL) :</strong> attendre les premières données.</li>
+                    <li><strong>Burst — C2 à C5 :</strong> transférer plusieurs mots contigus sans repayer toute la latence.</li>
+                    <li><strong>PRECHARGE (tRP) :</strong> refermer la ligne et préparer le banc avant d’en activer une autre.</li>
+                  </ol>
+                  <p>L’entrelacement des bancs masque une partie des délais : pendant que le banc A livre des données, on peut ouvrir une ligne du banc B.</p>
+                </div>
+              </div>
+              <div class="warning"><strong>Latence ≠ débit</strong>Les générations DDR augmentent fortement le débit et le nombre de bancs/prefetch, mais la latence absolue reste de l’ordre d’une dizaine de ns. Une CL plus grande en cycles peut correspondre à une horloge plus rapide.</div>
+
+              <div class="table-scroll deep-dive">
+                <table class="compare-table">
+                  <thead><tr><th>Génération</th><th>Bancs</th><th>Prefetch interne</th><th>Débit cité par broche</th><th>CL absolue</th></tr></thead>
+                  <tbody><tr><td>DDR</td><td>4</td><td>2n</td><td>jusqu’à 400 Mbit/s/broche</td><td>≈15 ns</td></tr><tr><td>DDR2</td><td>8</td><td>4n</td><td>600 Mbit/s/broche</td><td>≈15 ns</td></tr><tr><td>DDR3</td><td>8</td><td>8n</td><td>1 066 Mbit/s/broche</td><td>≈10–13 ns</td></tr><tr><td>DDR4</td><td>non indiqué</td><td>8n</td><td>1 600–3 200 Mbit/s/broche</td><td>≈11–13 ns</td></tr><tr><td>DDR5</td><td>64–128</td><td>16n</td><td>6 400 Mbit/s/broche</td><td>≈17 ns (table)</td></tr></tbody>
+                </table>
+                <p><strong>À ne pas confondre :</strong> le prefetch est la largeur de la prélecture interne, tandis que « bit par cycle » et le débit décrivent l’interface externe par broche. DDR4 reste en <strong>8n-prefetch</strong> ; le support cite deux points DDR4, 1 600 et 3 200 Mbit/s par broche.</p>
+                <p>Le chiffrage <strong>CL – tRCD – tRP – tRAS</strong> donne respectivement CAS latency, délai RAS→CAS, précharge et durée minimale ligne active.</p>
+                <h3>Rafraîchissement</h3>
+                <p>Exemple MT41J512M4 : toutes les cellules doivent être couvertes sur 64 ms. Une commande REFR est envoyée au plus toutes les 7,8 µs. Exemples du support : tRFC = 44 cycles à 800 MHz/1 Gbit ; 240 cycles à 1 600 MHz/4 Gbit. Il s’agit ici d’un rafraîchissement <strong>all-bank</strong> : tous les bancs sont indisponibles pendant tRFC.</p>
+              </div>
+              <div class="lesson-source">Diapos 10 à 17, animation PDF p. 13–18 · <a href="../Docs%20Cours/SoC_memoire.pdf#page=12" target="_blank" rel="noopener">Voir l’architecture SDRAM</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="memory-3" data-lesson="memory-3" data-title="Hiérarchie mémoire cache scratchpad BRAM localité" data-panel-id="memory">
+            <header class="lesson-head">
+              <span class="lesson-index">3.3</span>
+              <div class="lesson-title-wrap"><h2>Hiérarchie : vitesse du haut, coût du bas</h2><p>Localités temporelle et spatiale</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 3.3 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="core-idea"><strong>Objectif impossible… rendu pratique</strong>Obtenir presque la vitesse de la petite mémoire rapide au coût de la grande mémoire lente, en gardant près du calcul les données les plus souvent utilisées.</div>
+              <div class="two-col">
+                <div>
+                  <div class="memory-pyramid" id="memory-pyramid" aria-label="Hiérarchie mémoire interactive">
+                    <button class="memory-level" data-memory="Registres · ~1 cycle · minuscules · coût/bit maximal" type="button">Registres</button>
+                    <button class="memory-level" data-memory="Cache L1/L2 SRAM · automatique · rapide mais imprévisible en cas de défaut" type="button">Caches SRAM</button>
+                    <button class="memory-level" data-memory="Scratchpad / SRAM / BRAM · adressable · gestion explicite ou par DMA" type="button">Mémoire locale</button>
+                    <button class="memory-level" data-memory="DRAM intégrée ou mémoire système · capacité intermédiaire" type="button">DRAM interne</button>
+                    <button class="memory-level" data-memory="DDR externe · grande capacité et bon débit en burst, forte latence" type="button">RAM externe</button>
+                  </div>
+                  <div class="soc-explain" id="memory-explain">Clique sur un niveau : en descendant, capacité ↑ ; latence, énergie et distance ↑ ; coût par bit ↓.</div>
+                </div>
+                <div>
+                  <h3>Les deux localités</h3>
+                  <ul class="clean-list"><li><strong>Temporelle :</strong> une donnée utilisée récemment sera probablement réutilisée bientôt.</li><li><strong>Spatiale :</strong> après une adresse, les adresses voisines ont de bonnes chances d’être utiles.</li></ul>
+                  <h3>Qui gère quoi ?</h3>
+                  <ul class="clean-list"><li><strong>Cache :</strong> copie automatique et transparente, comportement variable.</li><li><strong>Scratchpad (SPRAM) :</strong> connecté directement au cœur, visible dans l’espace mémoire, accès possible en un cycle ; le logiciel/DMA choisit les données.</li><li><strong>BRAM :</strong> IP esclave sur le bus, souvent mémoire d’échange entre maîtres et associée à des blocs de synchronisation.</li></ul>
+                </div>
+              </div>
+              <div class="deep-dive">
+                <h3>Le contrôleur mémoire</h3>
+                <p>Il convertit protocole système ↔ protocole mémoire, arbitre les accès, gère l’espace d’adressage et les protections, programme le rafraîchissement et peut intégrer des buffers/cache. C’est lui qui transforme des requêtes irrégulières en séquences banc/ligne/colonne efficaces.</p>
+              </div>
+              <div class="exam-tip"><strong>Comparaison essentielle</strong>Cache = automatique et transparent, mais défauts parfois imprévisibles. Scratchpad = prédictible et rapide, mais charge explicite pour le logiciel. BRAM = ressource partagée sur le bus.</div>
+              <div class="lesson-source">Diapos 24 à 34 · <a href="../Docs%20Cours/SoC_memoire.pdf#page=30" target="_blank" rel="noopener">Voir le contrôleur</a> · <a href="../Docs%20Cours/SoC_memoire.pdf#page=33" target="_blank" rel="noopener">Voir la hiérarchie</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="memory-4" data-lesson="memory-4" data-title="Cache adressage direct associatif set-associative hit miss AMAT remplacement écriture" data-panel-id="memory">
+            <header class="lesson-head">
+              <span class="lesson-index">3.4</span>
+              <div class="lesson-title-wrap"><h2>Cache : où une adresse peut-elle aller ?</h2><p>Tag, set, offset et compromis d’associativité</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 3.4 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="core-idea"><strong>Découpage d’adresse</strong>L’offset choisit l’octet dans la ligne, l’index choisit le set, le tag vérifie quelle ligne mémoire est présente. Un bit valide indique que l’entrée contient une donnée exploitable.</div>
+
+              <div class="two-col">
+                <div class="simulator">
+                  <div class="simulator-head"><div><h3>Mini-cache</h3><p id="cache-geometry">4 sets × 2 voies · 8 lignes de 16 octets = 128 octets</p></div><span class="tag">Interactif</span></div>
+                  <div class="request-controls">
+                    <label>Adresse <input id="cache-input" type="text" value="0x34" size="8" aria-label="Adresse cache"></label>
+                    <select id="cache-ways" aria-label="Associativité"><option value="1">Direct · 1 voie</option><option value="2" selected>2 voies</option><option value="4">4 voies</option></select>
+                    <button class="btn" id="cache-access" type="button">Accéder</button>
+                    <button class="btn ghost" id="cache-reset" type="button">Vider</button>
+                  </div>
+                  <div class="cache-address"><span class="tagbits">TAG<br><b id="cache-tag">0</b></span><span class="indexbits">SET<br><b id="cache-index">3</b></span><span class="offsetbits">OFFSET<br><b id="cache-offset">4</b></span></div>
+                  <div class="cache-sets" id="cache-sets" style="--ways:2"></div>
+                  <div class="big-result"><span>Résultat du dernier accès</span><strong id="cache-result">Prêt</strong></div>
+                </div>
+                <div>
+                  <h3>Trois allocations</h3>
+                  <ul class="clean-list"><li><strong>Directe :</strong> une seule ligne possible ; simple et rapide, conflits fréquents.</li><li><strong>Complètement associative :</strong> n’importe où ; peu de conflits, comparaison de tous les tags.</li><li><strong>Par ensemble (N-way) :</strong> N emplacements dans un set ; compromis courant.</li></ul>
+                  <h3>Remplacement</h3>
+                  <p>Aléatoire, FIFO, <strong>LRU</strong> (moins récemment utilisé) ou <strong>LFU</strong> (moins souvent utilisé). Il ne faut choisir qu’en cas de défaut et quand les voies du set sont occupées.</p>
+                </div>
+              </div>
+
+              <div class="deep-dive">
+                <span class="formula">Temps moyen = temps de hit + taux de défaut × pénalité de défaut</span>
+                <p>Exercice de la diapo 38, en supposant la même pénalité 10 : cache 2-way = 1 + 0,049×10 = <strong>1,49</strong> ; cache 4-way = 1,1 + 0,044×10 = <strong>1,54</strong>. Malgré moins de défauts, le 4-way est ici plus lent : l’associativité augmente le temps de hit.</p>
+                <h3>Les autres politiques</h3>
+                <ul class="clean-list"><li><strong>Write-through / transparent :</strong> écrire immédiatement au niveau inférieur ; simple et cohérent, trafic élevé.</li><li><strong>Write-back / différée :</strong> marquer dirty puis écrire à l’éviction ; moins de trafic, contrôle plus complexe.</li><li>Améliorer le miss rate : taille, associativité, victim buffer, organisation des données et des boucles.</li><li>Adressage de cache : virtuel ou physique, avec compromis traduction/cohérence.</li></ul>
+              </div>
+              <div class="warning"><strong>Plus gros / plus associatif n’est pas toujours plus rapide</strong>Le graphe du cours montre que la taille et les comparateurs associatifs augmentent le temps d’accès. L’objectif est le temps moyen, pas le seul taux de défaut.</div>
+              <div class="lesson-source">Diapos 35 à 43 · <a href="../Docs%20Cours/SoC_memoire.pdf#page=41" target="_blank" rel="noopener">Voir les allocations</a> · <a href="../Docs%20Cours/SoC_memoire.pdf#page=46" target="_blank" rel="noopener">Voir le calcul AMAT</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="memory-5" data-lesson="memory-5" data-title="TD estimation de mouvement MPEG débit DDR burst cache réutilisation PowerPC TM32" data-panel-id="memory">
+            <header class="lesson-head">
+              <span class="lesson-index">3.5</span>
+              <div class="lesson-title-wrap"><h2>Cas vidéo : transformer la réutilisation en débit</h2><p>Estimation de mouvement MPEG, 5×5 blocs</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 3.5 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <p>Pour chaque macrobloc courant 8×8, on évalue une somme des différences absolues avec 25 candidats d’une fenêtre 5×5 dans la trame de référence. La distance doit être remise à zéro pour <em>chaque</em> candidat, puis comparée au minimum du bloc courant.</p>
+              <div class="formula"><code>pour chaque trame, by, bx : dmin ← +∞ ; (dx*, dy*) ← (0, 0)<br>pour dy∈[−2,2], dx∈[−2,2] : d ← 0<br>&nbsp;&nbsp;pour y∈[0,7], x∈[0,7] : d ← d + |C[8by+y, 8bx+x] − R[8(by+dy)+y, 8(bx+dx)+x]|<br>&nbsp;&nbsp;si d &lt; dmin : dmin ← d ; (dx*, dy*) ← (dx, dy)<br>mouvement(by,bx) ← (dx*, dy*) = arg min d(dx,dy)</code></div>
+              <div class="stats-grid">
+                <div class="stat"><strong>90 × 66</strong><span>macroblocs après arrondi 720×528</span></div>
+                <div class="stat"><strong>5 940</strong><span>blocs courants par trame</span></div>
+                <div class="stat"><strong>9,504 M</strong><span>comparaisons pixel par trame</span></div>
+                <div class="stat"><strong>237,6 M/s</strong><span>comparaisons à 25 images/s</span></div>
+              </div>
+              <p>Calcul : 5 940 × 25 candidats × 64 pixels × 25 images/s = <strong>237,6 millions</strong> de couples pixel/s. Si le bloc courant est déjà interne et un pixel de référence vaut 1 octet, cela exige au moins 237,6 MB/s de lectures externes sans réutilisation.</p>
+
+              <div class="two-col deep-dive">
+                <div>
+                  <h3>DDR 100 MHz, 32 bits, CL = 3</h3>
+                  <p>En tenant compte du <strong>double data rate</strong>, donc 2 mots de 32 bits par cycle pendant les données, le modèle « CL puis B/2 cycles de transfert » donne :</p>
+                  <table class="compare-table"><thead><tr><th>Burst B</th><th>Débit ≈ 100 MHz×4B/(3+B/2)</th><th>Suffisant ?</th></tr></thead><tbody><tr><td>1 isolé</td><td>≈114,3 MB/s</td><td>Non</td></tr><tr><td>2</td><td>200 MB/s</td><td>Non</td></tr><tr><td>4</td><td>320 MB/s</td><td>Oui</td></tr><tr><td>8</td><td>≈457,1 MB/s</td><td>Oui</td></tr></tbody></table>
+                  <p>Si un chronogramme simplifié compte au contraire <em>un</em> mot par cycle, utiliser 100 MHz×4B/(CL+B) : 160, 228,6 et 290,9 MB/s pour B=2,4,8. Dans une copie, annoncer la convention avant le calcul ; elle change le premier burst suffisant.</p>
+                </div>
+                <div>
+                  <h3>Pourquoi l’ordre mémoire compte</h3>
+                  <p>En row-major, une ligne d’un bloc 8×8 contient 8 octets, soit seulement deux mots contigus de 32 bits ; la ligne suivante est séparée par le stride de l’image. Un rangement tuilé par macroblocs rend tout le bloc contigu et facilite les longs bursts.</p>
+                  <p>À chaque déplacement horizontal de la fenêtre, <strong>20 blocs sur 25</strong> sont conservés : 80 % de la zone entre deux recherches successives est commune ; seuls 5 nouveaux blocs doivent entrer.</p>
+                  <p><strong>Facteur 25, taux 96 % :</strong> si les candidats sont alignés sur les macroblocs, pour un pixel intérieur (loin des bords), avec une trame de référence inchangée et une mémoire locale assez grande, ce pixel sert aux recherches de 5×5 = <strong>25 blocs courants</strong>. Il y a un chargement obligatoire puis 24 réutilisations, soit 24/25 = <strong>96 % d’accès potentiellement réutilisés</strong>. Aux bords ou après une éviction de cache, ce taux baisse.</p>
+                </div>
+              </div>
+              <div class="table-scroll deep-dive">
+                <h3>Étude du TD : cache PowerPC ou TM32 ?</h3>
+                <table class="compare-table">
+                  <thead><tr><th>Processeur</th><th>Taille</th><th>Ligne</th><th>Associativité</th><th>Bits de set</th><th>Nombre de sets</th></tr></thead>
+                  <tbody><tr><td>PowerPC</td><td>16 Ko</td><td>32 octets</td><td>2 voies</td><td>A[12:5]</td><td>256</td></tr><tr><td>TM32</td><td>16 Ko</td><td>64 octets</td><td>8 voies</td><td>A[10:6]</td><td>32</td></tr></tbody>
+                </table>
+                <span class="formula">A(y,x) = base + 720y + x ; ligne = ⌊A/L⌋ ; set = ligne mod N<span class="sub">sets</span></span>
+                <p>Un pixel vaut un octet et l’image P est en ordre canonique. Pour le PowerPC, l’offset est A[4:0] et le tag commence au bit 13 ; pour le TM32, l’offset est A[5:0] et le tag commence au bit 11. Le stride de 720 octets décale donc le numéro de ligne de 22 ou 23 lignes PowerPC, et de 11 ou 12 lignes TM32, d’une rangée de pixels à la suivante.</p>
+                <p>Sous l’hypothèse d’une base alignée, d’une fenêtre intérieure de 40×40 pixels et d’un cache vide, le premier balayage touche <strong>80 lignes PowerPC = 2 560 octets transférés</strong>, contre <strong>60 lignes TM32 = 3 840 octets</strong>, pour 1 600 octets utiles. Les deux fenêtres tiennent dans 16 Ko ; le PowerPC limite ici la surlecture, tandis que le TM32 réduit le nombre de défauts et tolère mieux les conflits grâce à ses 8 voies.</p>
+                <p>Pour la recherche horizontale suivante, exploiter d’abord les lignes déjà présentes : la frontière utile nouvelle ne représente que 5×64 = <strong>320 octets</strong> en moyenne. En revanche, toute la bande de cinq rangées de macroblocs occupe 5×720×8 = <strong>28 800 octets</strong>, plus que les 16 Ko disponibles : sur une ligne complète de blocs courants, capacité, conflits de sets, ordre de parcours et remplacement déterminent le taux de hit réel.</p>
+              </div>
+              <div class="core-idea"><strong>Cache “maison”</strong>Une fenêtre roulante 5×5 demande au minimum 25×8×8 = <strong>1 600 octets</strong> et ne charge que la nouvelle colonne de 5 blocs. Pour tendre vers un seul bloc neuf par bloc courant en moyenne, conserver cinq rangées complètes de macroblocs demande 5×90×64 = <strong>28 800 octets</strong> ; après une ligne de 90 blocs, on remplace une rangée. Le banking/layout doit fournir en parallèle les pixels utiles.</div>
+              <div class="exam-tip"><strong>La vraie conclusion du TD</strong>Ranger les données comme l’algorithme les parcourt, conserver les lignes réutilisées et charger seulement la frontière nouvelle. Une hiérarchie générique n’est efficace que si son mapping évite les conflits de sets.</div>
+              <div class="lesson-source">Diapos 45 à 57 · <a href="../Docs%20Cours/SoC_memoire.pdf#page=53" target="_blank" rel="noopener">Voir le principe</a> · <a href="../Docs%20Cours/SoC_memoire.pdf#page=55" target="_blank" rel="noopener">Voir l’énoncé</a> · <a href="../Docs%20Cours/SoC_memoire.pdf#page=60" target="_blank" rel="noopener">Voir l’étude PowerPC/TM32</a></div>
+            </div>
+          </article>
+        </section>
+        <section class="course-panel" id="panel-cnn" data-panel="cnn">
+          <div class="panel-hero cnn-hero">
+            <p class="eyebrow">Chapitre 04 · SLE_SoC_etudes_cas_CNN</p>
+            <h1>Du réseau de neurones aux MAC câblés</h1>
+            <p class="lead">Un CNN est une masse de produits-accumulations. Le défi architectural est de choisir la précision, exploiter tous les axes de parallélisme et alimenter les opérateurs sans exploser les transferts.</p>
+            <div class="hero-actions"><button class="btn" data-scroll="cnn-1" type="button">Démarrer la leçon</button><a class="btn secondary" href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf" target="_blank" rel="noopener">Support original ↗</a></div>
+          </div>
+
+          <div class="source-banner"><span>Source principale : <strong>S. Mancini — Architectures pour les réseaux de neurones</strong></span><a href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf" target="_blank" rel="noopener">Ouvrir les 104 pages ↗</a></div>
+          <div class="focus-only core-idea"><strong>Fil rouge</strong>Ajouter des MAC ne sert à rien si la précision, le banking mémoire, la réutilisation et l’ordre des boucles ne permettent pas de les nourrir.</div>
+
+          <article class="lesson searchable" id="cnn-1" data-lesson="cnn-1" data-title="IEEE 754 flottant et représentation virgule fixe Q e v" data-panel-id="cnn">
+            <header class="lesson-head">
+              <span class="lesson-index">4.1</span>
+              <div class="lesson-title-wrap"><h2>Flottant ou fixe : choisir où mettre les bits</h2><p>Dynamique, précision, surface et énergie</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 4.1 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="two-col">
+                <div>
+                  <span class="formula">flottant : a = (−1)<span class="sup">s</span> · 1,M · 2<span class="sup">E−biais</span></span>
+                  <table class="compare-table"><thead><tr><th>IEEE 754</th><th>Signe</th><th>Exp.</th><th>Mantisse</th><th>Biais</th></tr></thead><tbody><tr><td>Simple 32 bits</td><td>1</td><td>8</td><td>23 stockés (24 effectifs)</td><td>127</td></tr><tr><td>Double 64 bits</td><td>1</td><td>11</td><td>52 stockés (53 effectifs)</td><td>1023</td></tr></tbody></table>
+                  <p>L’addition flottante compare les exposants, aligne les mantisses, calcule, recherche le bit significatif, renormalise et arrondit. Il faut aussi gérer dénormalisés, ±∞, NaN, zéros et débordements.</p>
+                </div>
+                <div class="simulator">
+                  <div class="simulator-head"><div><h3>Quantificateur non signé Qe.v</h3><p>Répartis les bits et quantifie une valeur.</p></div><span class="tag">Interactif</span></div>
+                  <div class="controls">
+                    <label class="control-row"><span>Bits entiers e</span><input id="fixed-e" type="range" min="1" max="8" value="3"><output id="fixed-e-out">3</output></label>
+                    <label class="control-row"><span>Bits fraction v</span><input id="fixed-v" type="range" min="0" max="12" value="7"><output id="fixed-v-out">7</output></label>
+                    <label class="control-row"><span>Valeur</span><input id="fixed-value" type="range" min="0" max="8" step="0.01" value="3.64"><output id="fixed-value-out">3,64</output></label>
+                  </div>
+                  <div class="big-result"><span id="fixed-range">Plage 0…7,992 · pas 0,0078125</span><strong id="fixed-result">011.1010010 = 3,640625</strong></div>
+                  <p id="fixed-error" style="font-size:.75rem;color:var(--ink-soft)">Erreur d’arrondi : +0,000625</p>
+                </div>
+              </div>
+              <div class="core-idea"><strong>Compromis fixe</strong>À largeur constante, plus de bits entiers = plus de dynamique ; plus de bits fractionnaires = un pas plus fin. Pour l’exemple Q3.7, 3,64×128 = 465,92 : troncature 465 → 3,6328125 ; arrondi 466 → 3,640625.</div>
+              <div class="warning"><strong>Le flottant n’est pas « exact »</strong>En simple précision, <code>(3 + 20 000 000) − 20 000 000</code> donne 4 : autour de 20 millions, les valeurs représentables sont espacées de 2 et 20 000 003 est arrondi à 20 000 004.</div>
+              <div class="deep-dive two-col">
+                <div><h3>Coût matériel cité</h3><p>Un opérateur flottant représente environ <strong>20 à 30×</strong> la surface et <strong>4 à 5×</strong> la latence de l’équivalent entier dans les ordres de grandeur du cours. Il consomme davantage et complique la synchronisation.</p></div>
+                <div><h3>Dynamique et RSB</h3><span class="formula">D<span class="sub">N</span> = 20 log₁₀(max|x|/min|x|)<br>RSB = 10 log₁₀(P<span class="sub">s</span>/P<span class="sub">e</span>)</span><p>Le flottant a une précision relative ; le fixe, un pas absolu. Un signal trop petit par rapport à la pleine échelle fixe aura un mauvais RSB.</p></div>
+              </div>
+              <div class="lesson-source">Diapos 2 à 8 · <a href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf#page=3" target="_blank" rel="noopener">Voir les formats</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="cnn-2" data-lesson="cnn-2" data-title="Arithmétique fixe addition multiplication arrondi troncature saturation bruit" data-panel-id="cnn">
+            <header class="lesson-head">
+              <span class="lesson-index">4.2</span>
+              <div class="lesson-title-wrap"><h2>Arithmétique fixe : suivre la croissance des bits</h2><p>Aligner, élargir, puis réduire proprement</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 4.2 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="two-col">
+                <div class="card"><span class="tag">Addition</span><span class="formula">c<span class="sub">e</span> = max(a<span class="sub">e</span>,b<span class="sub">e</span>)+1<br>c<span class="sub">v</span> = max(a<span class="sub">v</span>,b<span class="sub">v</span>)</span><p>Aligner les parties fractionnaires. En matériel fixe, un décalage constant peut n’être que du câblage. Somme de N termes : prévoir ≈ ⌈log₂N⌉ bits entiers de garde.</p></div>
+                <div class="card"><span class="tag coral">Multiplication</span><span class="formula">c<span class="sub">e</span> = a<span class="sub">e</span> + b<span class="sub">e</span><br>c<span class="sub">v</span> = a<span class="sub">v</span> + b<span class="sub">v</span></span><p>Pas d’alignement préalable, mais les largeurs s’additionnent. Une chaîne de produits devient vite trop large. La division reste l’opération matérielle la plus complexe.</p></div>
+              </div>
+              <div class="three-col">
+                <div class="card"><h3>Troncature</h3><p>Supprime les bits faibles : simple mais biaisée, précision réduite.</p></div>
+                <div class="card"><h3>Arrondi</h3><p>Ajoute la demi-valeur du nouveau LSB puis tronque : erreur mieux centrée.</p></div>
+                <div class="card"><h3>Saturation</h3><p>Bloque à la borne au lieu de laisser un débordement revenir modulo.</p></div>
+              </div>
+              <span class="formula">pas Δ = 2<span class="sup">−v</span>   ·   erreur d’arrondi ≈ [−Δ/2, +Δ/2]   ·   puissance de bruit ≈ Δ²/12</span>
+              <div class="core-idea"><strong>Cycle de conversion</strong>Référence flottante → plage de chaque variable → choix e/v → simulation bit-accurate → mesure d’erreur/qualité → ajustement → partition HW/SW → implantation. Le choix fixe n’est validé que si la qualité applicative reste dans la tolérance.</div>
+              <div class="deep-dive"><p>Une saturation non signée exacte vers Qe′.v′ utilise la borne 2<sup>e′</sup>−2<sup>−v′</sup>. En signé, il faut vérifier les deux bornes. Le support écrit une forme simplifiée avec min(2<sup>e′</sup>−1,a).</p></div>
+              <div class="exam-tip"><strong>Routine de calcul</strong>1) écrire les formats ; 2) propager e et v avec les règles ; 3) déterminer le format cible ; 4) annoncer arrondi/troncature ; 5) vérifier débordement et saturation.</div>
+              <div class="lesson-source">Diapos 9 à 17 · <a href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf#page=11" target="_blank" rel="noopener">Voir les règles</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="cnn-3" data-lesson="cnn-3" data-title="Réseau de neurones apprentissage inférence ReLU MaxPool Softmax fully connected" data-panel-id="cnn">
+            <header class="lesson-head">
+              <span class="lesson-index">4.3</span>
+              <div class="lesson-title-wrap"><h2>Du neurone aux couches d’un CNN</h2><p>Ce qui est appris, ce qui est calculé</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 4.3 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <span class="formula">neurone : s = φ(Σ<span class="sub">k</span> θ<span class="sub">k</span>e<span class="sub">k</span> + b)</span>
+              <p>La partie linéaire est une somme de produits ; la fonction d’activation apporte la non-linéarité. L’apprentissage détermine les coefficients θ à partir de données étiquetées. L’architecture et les hyperparamètres ne sont pas simplement « appris » par cette boucle.</p>
+              <div class="two-col">
+                <div class="card"><span class="tag blue">Apprentissage</span><h3>Corriger les coefficients</h3><p>Le support note <strong>y</strong> l’observation, <strong>x</strong> l’étiquette/générateur, x̃=f(y) la prédiction et δ=x−x̃ l’erreur. Fonction de coût, régularisation et descente de gradient ajustent θ.</p></div>
+                <div class="card"><span class="tag">Inférence</span><h3>Exécuter le réseau figé</h3><p>Les coefficients sont déjà appris. Une nouvelle observation traverse les couches pour produire détection, classification, régression ou synthèse.</p></div>
+              </div>
+              <div class="warning"><strong>Convention du professeur</strong>Beaucoup de cours notent x l’entrée et y la cible ; ce support fait l’inverse. Dans une réponse, définis toujours tes symboles.</div>
+
+              <div class="concept-grid">
+                <div class="card"><h3>Convolution</h3><p>Fenêtres locales, coefficients partagés, sortie 3D.</p></div>
+                <div class="card"><h3>ReLU</h3><span class="formula">max(0,a)</span><p>Très simple ; dérivée 1 côté positif, 0 côté négatif.</p></div>
+                <div class="card"><h3>MaxPool</h3><p>Maximum par fenêtre, canal par canal ; réduit W×H, aucun poids.</p></div>
+                <div class="card"><h3>Fully connected</h3><span class="formula">S = M·I</span><p>Aplatit la feature map ; chaque sortie voit toute l’entrée.</p></div>
+              </div>
+              <div class="simulator deep-dive cnn-stepper maxpool-simulator" id="maxpool-simulator" data-step="0" data-step-count="4">
+                <div class="simulator-head"><div><h3>MaxPool 2×2, stride 2</h3><p>Chaque fenêtre produit exactement un maximum, indépendamment dans chaque canal.</p></div><span class="tag">Pas à pas</span></div>
+                <div class="cnn-animation-flow maxpool-flow">
+                  <figure class="cnn-grid-figure">
+                    <figcaption>Entrée 4×4</figcaption>
+                    <div class="pool-grid pool-input" id="maxpool-input" data-rows="4" data-cols="4" data-values="1,5,2,0,4,3,7,1,2,6,8,4,0,1,5,9" aria-label="Entrée MaxPool quatre par quatre"></div>
+                  </figure>
+                  <span class="flow-arrow" aria-hidden="true">→</span>
+                  <figure class="cnn-grid-figure">
+                    <figcaption>Sortie 2×2</figcaption>
+                    <div class="pool-grid pool-output" id="maxpool-output" data-rows="2" data-cols="2" data-values="5,7,6,9" aria-label="Sortie MaxPool deux par deux"></div>
+                  </figure>
+                </div>
+                <div class="cnn-step-copy" id="maxpool-step" role="status" aria-live="polite"><span>Fenêtre 1/4 · coin supérieur gauche</span><strong id="maxpool-equation">max(1, 5, 4, 3) = 5</strong></div>
+                <div class="request-controls"><button class="btn ghost" id="maxpool-prev" type="button" aria-controls="maxpool-input maxpool-output" disabled>← Précédente</button><button class="btn" id="maxpool-next" type="button" aria-controls="maxpool-input maxpool-output">Fenêtre suivante</button><button class="btn ghost" id="maxpool-auto" type="button" aria-controls="maxpool-input maxpool-output">Lecture auto</button></div>
+              </div>
+              <div class="deep-dive">
+                <h3>Softmax pour la classification</h3>
+                <span class="formula">softmax(z)<span class="sub">i</span> = exp(z<span class="sub">i</span>) / Σ<span class="sub">j</span> exp(z<span class="sub">j</span>)</span>
+                <p>Les <em>logits</em> z deviennent des probabilités positives de somme 1. Le score maximal reste la classe maximale, mais les écarts sont transformés en distribution.</p>
+                <h3>Generalisation</h3>
+                <p>Le support sépare la base en apprentissage et test afin de détecter le sur-entraînement. La composition du réseau s’écrit f<sub>n−1</sub>(θ<sub>n−1</sub>, … f<sub>0</sub>(θ<sub>0</sub>,y)).</p>
+              </div>
+              <div class="lesson-source">Diapos 19 à 28 et 31 à 34 · <a href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf#page=21" target="_blank" rel="noopener">Voir l’apprentissage</a> · <a href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf#page=35" target="_blank" rel="noopener">Voir les couches</a> · <a href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf#page=36" target="_blank" rel="noopener">Voir MaxPool animé</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="cnn-4" data-lesson="cnn-4" data-title="Convolution multicanal feature map dimensions paramètres MAC GoogleNet" data-panel-id="cnn">
+            <header class="lesson-head">
+              <span class="lesson-index">4.4</span>
+              <div class="lesson-title-wrap"><h2>Convolution : la fenêtre qui devient une usine à MAC</h2><p>Indices, dimensions et complexité</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 4.4 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <span class="formula">S<span class="sub">c,i,j</span> = Σ<span class="sub">l,m,n</span> I<span class="sub">l,i+m,j+n</span> · K<span class="sub">c,l,m,n</span> + bias<span class="sub">c</span></span>
+              <p><strong>l</strong> parcourt les canaux d’entrée, <strong>c</strong> choisit un canal de sortie, <strong>m,n</strong> parcourent le noyau et <strong>i,j</strong> la sortie. Un canal de sortie accumule <em>tous</em> les canaux d’entrée ; chaque c possède son propre noyau complet.</p>
+
+              <div class="two-col">
+                <div class="simulator">
+                  <div class="simulator-head"><div><h3>Fenêtre 3×3 glissante</h3><p>Un pas calcule un pixel de sortie.</p></div><span class="tag">Animé</span></div>
+                  <div class="conv-layout">
+                    <div class="pixel-grid" id="conv-grid" style="--size:5" aria-label="Image 5 par 5"></div>
+                    <div><p style="text-align:center;font-weight:800">Kernel</p><div class="kernel-grid" id="kernel-grid"></div></div>
+                  </div>
+                  <div class="request-controls"><button class="btn" id="conv-next" type="button">Position suivante</button><button class="btn ghost" id="conv-auto" type="button">Balayage auto</button></div>
+                  <div class="big-result"><span>Somme des 9 produits</span><strong id="conv-result">−4</strong></div>
+                </div>
+                <div>
+                  <h3>Formules à savoir refaire</h3>
+                  <span class="formula">H<span class="sub">out</span> = ⌊(H<span class="sub">in</span>+2P−K<span class="sub">h</span>)/S⌋ + 1</span>
+                  <span class="formula">poids = C<span class="sub">out</span>C<span class="sub">in</span>K<span class="sub">h</span>K<span class="sub">w</span> (+ biais)</span>
+                  <span class="formula">MAC = H<span class="sub">out</span>W<span class="sub">out</span>C<span class="sub">out</span>C<span class="sub">in</span>K<span class="sub">h</span>K<span class="sub">w</span></span>
+                  <p>La « convolution » des frameworks est techniquement une corrélation si le noyau n’est pas retourné ; on conserve néanmoins le nom usuel.</p>
+                </div>
+              </div>
+
+              <div class="simulator deep-dive">
+                <div class="simulator-head"><div><h3>Calculateur de couche</h3><p>Sans padding, stride 1.</p></div></div>
+                <div class="controls">
+                  <label class="control-row"><span>H = W</span><input id="conv-size" type="range" min="5" max="224" value="28"><output id="conv-size-out">28</output></label>
+                  <label class="control-row"><span>C entrée</span><input id="conv-cin" type="range" min="1" max="128" value="32"><output id="conv-cin-out">32</output></label>
+                  <label class="control-row"><span>C sortie</span><input id="conv-cout" type="range" min="1" max="256" value="64"><output id="conv-cout-out">64</output></label>
+                  <label class="control-row"><span>Kernel</span><input id="conv-k" type="range" min="1" max="7" step="2" value="3"><output id="conv-k-out">3×3</output></label>
+                </div>
+                <div class="big-result"><span id="conv-dims">Sortie 26×26×64</span><strong id="conv-complexity">18 432 poids · 12 460 032 MAC</strong></div>
+              </div>
+
+              <div class="deep-dive">
+                <h3>GoogleNet / Inception V1 : lire l’architecture</h3>
+                <p>Le texte du support retient <strong>22 couches</strong> ; des branches 1×1, 3×3, 5×5 et pooling sont exécutées en parallèle puis concaténées. Les convolutions 1×1 réduisent les canaux avant les noyaux coûteux. Exemple Inception 3a : 64 + 128 + 32 + 32 = <strong>256 canaux</strong>.</p>
+                <table class="compare-table"><thead><tr><th>Bloc</th><th>Sortie</th><th>Paramètres</th><th>Opérations</th></tr></thead><tbody><tr><td>Conv 7×7/2</td><td>112×112×64</td><td>2,7 K</td><td>34 M</td></tr><tr><td>Conv 3×3/1</td><td>56×56×192</td><td>112 K</td><td>360 M</td></tr><tr><td>Inception 3a</td><td>28×28×256</td><td>159 K</td><td>128 M</td></tr><tr><td>Inception 3b</td><td>28×28×480</td><td>380 K</td><td>304 M</td></tr><tr><td>Inception 4a→4e</td><td>14×14×512…832</td><td>364…840 K</td><td>73…170 M/bloc</td></tr><tr><td>Inception 5a/5b</td><td>7×7×832/1024</td><td>1 072/1 388 K</td><td>54/71 M</td></tr><tr><td>FC final</td><td>1×1×1000</td><td>1 000 K</td><td>1 M</td></tr></tbody></table>
+                <p>Somme des lignes renseignées du support : ≈6,80 M paramètres et ≈1,50 Md opérations. La figure historique étiquette AlexNet 8 couches, GoogleNet 21 et ResNet 152 ; VGG ≈57 Md MAC et ResNet ≈113 Md MAC, tandis que l’erreur diminue.</p>
+                <p><strong>Convention de comptage :</strong> pour restituer ce cours, retenir les <strong>22 couches</strong> annoncées dans le texte pour Inception V1. Le « 21 » appartient au graphique historique repris par le support et reflète une autre convention/source de comptage.</p>
+              </div>
+              <div class="lesson-source">Diapos 27 à 38, convolution animée PDF p. 32–34 · <a href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf#page=29" target="_blank" rel="noopener">Voir les CNN</a> · <a href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf#page=45" target="_blank" rel="noopener">Voir GoogleNet</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="cnn-5" data-lesson="cnn-5" data-title="Parallélisation SIMD vectorisation FPGA ASIC im2col GEMM GPU Tensor Core" data-panel-id="cnn">
+            <header class="lesson-head">
+              <span class="lesson-index">4.5</span>
+              <div class="lesson-title-wrap"><h2>Mapper la convolution sur le matériel</h2><p>Du SIMD aux matrices systoliques</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 4.5 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <h3>Cinq axes de parallélisme</h3>
+              <div class="concept-grid"><div class="card"><strong>Produits du noyau</strong><p>9 multiplications pour un 3×3, puis arbre d’addition.</p></div><div class="card"><strong>Pixels i,j</strong><p>Plusieurs sorties spatiales indépendantes.</p></div><div class="card"><strong>Canaux l</strong><p>Produits parallèles puis réduction.</p></div><div class="card"><strong>Canaux c</strong><p>Kernels différents, entrée diffusée.</p></div><div class="card"><strong>Régions de feature map</strong><p>Découper la sortie en tuiles indépendantes calculées en parallèle.</p></div></div>
+              <div class="warning"><strong>Le parallélisme demande du débit</strong>Chaque multiplication parallèle réclame ses opérandes et chaque résultat doit être stocké. Il faut bancs SRAM, mots larges, registres, diffusion et ports correspondants.</div>
+
+              <div class="two-col">
+                <div class="card"><span class="tag blue">SIMD selon les canaux</span><h3>Plusieurs l au même (i,j)</h3><p>Canaux contigus (layout de type NHWC), multiplication lane par lane, puis réduction horizontale. Problème : C pas toujours multiple de la largeur du vecteur.</p></div>
+                <div class="card"><span class="tag">SIMD selon les éléments</span><h3>Plusieurs sorties voisines</h3><p>Lignes spatiales contiguës, coefficient diffusé, un accumulateur par lane. Bon partage de K, mais fenêtres décalées et chevauchantes.</p></div>
+              </div>
+
+              <div class="two-col cnn-animation-pair">
+                <div class="simulator cnn-stepper simd-simulator" id="simd-channel-simulator" data-step="0" data-step-count="5">
+                  <div class="simulator-head"><div><h3>SIMD · vectoriser les canaux l</h3><p>Quatre canaux contigus contribuent au même pixel de sortie.</p></div><span class="tag blue">Réduction</span></div>
+                  <div class="simd-lanes" id="simd-channel-lanes" data-inputs="2,-1,3,4" data-weights="1,2,-1,1" aria-label="Quatre voies SIMD sur les canaux">
+                    <div class="simd-lane" data-lane="0"><span class="lane-name">l₀</span><span class="lane-input">2</span><span aria-hidden="true">×</span><span class="lane-weight">1</span><span aria-hidden="true">=</span><strong class="lane-product">2</strong></div>
+                    <div class="simd-lane" data-lane="1"><span class="lane-name">l₁</span><span class="lane-input">−1</span><span aria-hidden="true">×</span><span class="lane-weight">2</span><span aria-hidden="true">=</span><strong class="lane-product">−2</strong></div>
+                    <div class="simd-lane" data-lane="2"><span class="lane-name">l₂</span><span class="lane-input">3</span><span aria-hidden="true">×</span><span class="lane-weight">−1</span><span aria-hidden="true">=</span><strong class="lane-product">−3</strong></div>
+                    <div class="simd-lane" data-lane="3"><span class="lane-name">l₃</span><span class="lane-input">4</span><span aria-hidden="true">×</span><span class="lane-weight">1</span><span aria-hidden="true">=</span><strong class="lane-product">4</strong></div>
+                  </div>
+                  <div class="simd-reduction" id="simd-channel-reduction" aria-label="Arbre de réduction puis accumulateur">
+                    <span class="reduce-node" data-reduce-node="0">2 + (−2) = 0</span>
+                    <span class="reduce-node" data-reduce-node="1">−3 + 4 = 1</span>
+                    <span class="reduce-arrow" aria-hidden="true">→</span>
+                    <strong class="reduce-accumulator" id="simd-channel-accumulator">Σ = 1</strong>
+                  </div>
+                  <div class="cnn-step-copy" id="simd-channel-step" role="status" aria-live="polite"><span>1 · Charger quatre canaux contigus</span><strong id="simd-channel-equation">I[l₀…l₃] = [2, −1, 3, 4]</strong></div>
+                  <div class="request-controls"><button class="btn ghost" id="simd-channel-prev" type="button" aria-label="Étape précédente" aria-controls="simd-channel-lanes simd-channel-reduction" disabled>←</button><button class="btn" id="simd-channel-next" type="button" aria-controls="simd-channel-lanes simd-channel-reduction">Étape suivante</button><button class="btn ghost" id="simd-channel-auto" type="button" aria-controls="simd-channel-lanes simd-channel-reduction">Lecture auto</button></div>
+                </div>
+
+                <div class="simulator cnn-stepper simd-simulator" id="simd-spatial-simulator" data-step="0" data-step-count="4">
+                  <div class="simulator-head"><div><h3>SIMD · vectoriser les éléments</h3><p>Un même coefficient est diffusé vers quatre sorties voisines.</p></div><span class="tag">Diffusion</span></div>
+                  <div class="simd-broadcast"><span>Coefficient partagé</span><strong id="simd-spatial-coefficient">K[m,n] = 2</strong></div>
+                  <div class="simd-lanes spatial-lanes" id="simd-spatial-lanes" data-pixels="1,3,2,4" data-accumulators="5,-1,2,0" data-coefficient="2" aria-label="Quatre voies SIMD sur des sorties voisines">
+                    <div class="simd-lane" data-lane="0"><span class="lane-name">S₀</span><span class="lane-acc">5</span><span aria-hidden="true">+</span><span class="lane-input">1</span><span aria-hidden="true">×2 →</span><strong class="lane-product">7</strong></div>
+                    <div class="simd-lane" data-lane="1"><span class="lane-name">S₁</span><span class="lane-acc">−1</span><span aria-hidden="true">+</span><span class="lane-input">3</span><span aria-hidden="true">×2 →</span><strong class="lane-product">5</strong></div>
+                    <div class="simd-lane" data-lane="2"><span class="lane-name">S₂</span><span class="lane-acc">2</span><span aria-hidden="true">+</span><span class="lane-input">2</span><span aria-hidden="true">×2 →</span><strong class="lane-product">6</strong></div>
+                    <div class="simd-lane" data-lane="3"><span class="lane-name">S₃</span><span class="lane-acc">0</span><span aria-hidden="true">+</span><span class="lane-input">4</span><span aria-hidden="true">×2 →</span><strong class="lane-product">8</strong></div>
+                  </div>
+                  <div class="cnn-step-copy" id="simd-spatial-step" role="status" aria-live="polite"><span>1 · Diffuser K[m,n] dans toutes les voies</span><strong id="simd-spatial-equation">un coefficient · quatre accumulateurs indépendants</strong></div>
+                  <div class="request-controls"><button class="btn ghost" id="simd-spatial-prev" type="button" aria-label="Étape précédente" aria-controls="simd-spatial-lanes" disabled>←</button><button class="btn" id="simd-spatial-next" type="button" aria-controls="simd-spatial-lanes">Étape suivante</button><button class="btn ghost" id="simd-spatial-auto" type="button" aria-controls="simd-spatial-lanes">Lecture auto</button></div>
+                </div>
+              </div>
+
+              <div class="deep-dive">
+                <h3>Progression FPGA/ASIC du cours</h3>
+                <div class="pipeline-strip"><div class="pipeline-block"><strong>1 SRAM</strong><small>I, K, S se disputent les ports</small></div><div class="pipeline-block"><strong>+ registre S</strong><small>garder l’accumulation</small></div><div class="pipeline-block"><strong>2 SRAM</strong><small>K séparé</small></div><div class="pipeline-block"><strong>3 SRAM</strong><small>I / K / S découplés</small></div><div class="pipeline-block"><strong>3 multiplicateurs</strong><small>mots/banques élargis</small></div><div class="pipeline-block"><strong>9 multiplicateurs</strong><small>produits 3×3 puis arbre</small></div><div class="pipeline-block"><strong>C′ kernels</strong><small>entrée mutualisée</small></div></div>
+                <p>Configuration illustrée : <strong>9C′ multiplicateurs</strong>, C′ arbres et accumulateurs, line buffers pour trois lignes, banques de coefficients et sorties. Les sommes partielles restent près des opérateurs.</p>
+                <h3>im2col puis GEMM</h3>
+                <p>Chaque fenêtre devient une ligne de matrice, les kernels sont aplatis, puis la convolution devient un produit matriciel. Une unité fixe, par exemple 4×4 ou 16×16, traite toutes les couches par tuiles.</p>
+                <span class="formula">C<span class="sub">tuile</span> = A<span class="sub">gauche</span>B<span class="sub">haut</span> + A<span class="sub">droite</span>B<span class="sub">bas</span></span>
+                <p>Avantage : unité générique et très optimisée. Coûts : duplication logique/physique d’im2col, stockage temporaire, padding des tailles non multiples. Un déroulement de boucle ×3 exige aussi trois jeux d’opérandes et trois destinations par cycle.</p>
+              </div>
+
+              <div class="two-col">
+                <div class="simulator cnn-stepper matrix-tiling-simulator" id="matrix-tiling-simulator" data-step="0" data-step-count="4">
+                  <div class="simulator-head"><div><h3>Tuilage matriciel A×B → C</h3><p>Deux sous-produits alimentent puis accumulent la même tuile C.</p></div><span class="tag coral">Accumulation</span></div>
+                  <div class="matrix-flow" aria-label="Produit matriciel décomposé en deux sous-produits">
+                    <figure class="matrix-operand"><figcaption>A · 2×4</figcaption><div class="matrix-grid" id="matrix-a" data-rows="2" data-cols="4" data-split="2" data-values="1,2,3,4,5,6,7,8"></div></figure>
+                    <span class="matrix-operator" aria-hidden="true">×</span>
+                    <figure class="matrix-operand"><figcaption>B · 4×2</figcaption><div class="matrix-grid" id="matrix-b" data-rows="4" data-cols="2" data-split="2" data-values="1,0,0,1,1,1,2,1"></div></figure>
+                    <span class="matrix-operator" aria-hidden="true">→</span>
+                    <figure class="matrix-operand"><figcaption>C · 2×2</figcaption><div class="matrix-grid matrix-accumulator" id="matrix-c" data-rows="2" data-cols="2" data-values="12,9,28,21" data-partial-a="1,2,5,6" data-partial-b="11,7,23,15"></div></figure>
+                  </div>
+                  <div class="cnn-step-copy" id="matrix-tiling-step" role="status" aria-live="polite"><span>1 · Initialiser les accumulateurs</span><strong id="matrix-tiling-equation">C = 0</strong></div>
+                  <div class="matrix-legend"><span><i class="matrix-swatch first"></i>A<sub>gauche</sub>×B<sub>haut</sub></span><span><i class="matrix-swatch second"></i>A<sub>droite</sub>×B<sub>bas</sub></span></div>
+                  <div class="request-controls"><button class="btn ghost" id="matrix-tiling-prev" type="button" aria-controls="matrix-a matrix-b matrix-c" disabled>← Précédente</button><button class="btn" id="matrix-tiling-next" type="button" aria-controls="matrix-a matrix-b matrix-c">Accumuler</button><button class="btn ghost" id="matrix-tiling-auto" type="button" aria-controls="matrix-a matrix-b matrix-c">Lecture auto</button></div>
+                </div>
+                <div>
+                  <h3>Nvidia Turing</h3>
+                  <ul class="clean-list"><li>TU102 : 576 Tensor Cores, 8 par SM → 72 SM.</li><li>Un Tensor Core : jusqu’à 64 FMA FP16/cycle.</li><li>Un SM : 8×64 = 512 MAC/cycle = 1 024 opérations/cycle si mul+add comptent séparément.</li><li>INT8 : 2 048 opérations/cycle/SM dans le support.</li></ul>
+                  <div class="exam-tip"><strong>Toujours annoncer la convention</strong>1 MAC peut être compté comme une opération composée ou comme 2 opérations élémentaires. Sans précision, un TOPS est ambigu.</div>
+                </div>
+              </div>
+              <div class="lesson-source">Diapos 40 à 67, animations SIMD PDF p. 54–71 · <a href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf#page=47" target="_blank" rel="noopener">Voir l’analyse</a> · <a href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf#page=75" target="_blank" rel="noopener">Voir les architectures</a> · <a href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf#page=84" target="_blank" rel="noopener">Voir le tuilage animé</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="cnn-6" data-lesson="cnn-6" data-title="Movidius Cambricon X Ascend DaVinci sparsité accélérateurs IA" data-panel-id="cnn">
+            <header class="lesson-head">
+              <span class="lesson-index">4.6</span>
+              <div class="lesson-title-wrap"><h2>Trois accélérateurs, trois partis pris</h2><p>Movidius, Cambricon-X et Ascend</p></div>
+              <button class="complete-btn" type="button" aria-label="Marquer la leçon 4.6 comme comprise"></button>
+            </header>
+            <div class="lesson-body">
+              <div class="three-col">
+                <div class="card"><span class="tag blue">Movidius Myriad 2</span><h3>VPU hétérogène</h3><p>12 cœurs SHAVE VLIW/SIMD, blocs vision fixes, mémoire CMX multiport, crossbar, deux RISC, LPDDR et &gt;20 îlots d’alimentation.</p><p><strong>345,6 GOPS théoriques</strong> = 48 op/cycle × 12 × 600 MHz. GoogleNet : 85,61 GFLOPS, 1,2 W, 71,34 GOPS/W.</p></div>
+                <div class="card"><span class="tag coral">Cambricon-X</span><h3>Sauter les zéros</h3><p>Pruning et compression hors ligne ; le contrôleur de buffer indexe/décode le flux en amont des PE, qui reçoivent les seuls opérandes utiles et évitent les multiplications nulles.</p><p>Mobile : <strong>2 TOPS FP16, 0,5 W</strong>. PCI : 83,2 TFLOPS FP16 ou 166,4 TOPS INT8, 110 W.</p></div>
+                <div class="card"><span class="tag">Ascend / DaVinci</span><h3>Régulariser avant le cube</h3><p>Décompression et im2col séparés du calcul ; produit matriciel fixe 16×16×16, hiérarchie explicitement pilotée par MTE.</p><p><strong>4 096 MAC FP16</strong> ou 8 192 MAC INT8/cycle ; 8 TOPS FP16, 16 TOPS INT8, max 8 W.</p></div>
+              </div>
+
+              <div class="deep-dive">
+                <h3>Pourquoi Ascend change de stratégie</h3>
+                <p>Gérer chaque coefficient irrégulier dans le cœur de calcul a un coût et empêche une décomposition matricielle régulière. Ascend paie un prétraitement en amont, puis rentabilise un cube dense.</p>
+                <p>DaVinci : L1 1 MB ; buffers A/B L0 64 KB chacun ; C L0 256 KB ; unified buffer 256 KB ; I-cache 32 KB ; unité vectorielle 2 048 bits ; files Cube/Vector/MTE distinctes.</p>
+                <h3>Optimisations transversales</h3>
+                <ul class="clean-list"><li>8–16 bits souvent suffisants ; binaire/ternaire très petit mais parfois trop imprécis ou plus gourmand en coefficients.</li><li>Sparsité, pruning et compression : gain seulement si le coût de codage/décodage est amorti.</li><li>Transformer le réseau, éliminer les redondances et mutualiser les calculs peut dépasser tout gain microarchitectural.</li></ul>
+              </div>
+
+              <div class="exam-tip"><strong>Grille de lecture du document d’architecture</strong>Opération dominante → format → MAC/cycle → axes parallèles → alimentation mémoire → données réutilisées → gestion des bords/tailles → sparsité/quantification → coût de l’optimisation → débit, W et op/W → contexte visé.</div>
+              <div class="core-idea"><strong>Conclusion du professeur</strong>Il existe une grande variété d’architectures parce qu’elles optimisent des tâches et contextes différents. Aucune n’est la meilleure sur tous les axes.</div>
+              <div class="lesson-source">Diapos 69 à 76 · <a href="../Docs%20Cours/SLE_SoC_etudes_cas_CNN.pdf#page=95" target="_blank" rel="noopener">Voir les études de cas</a></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="course-panel" id="panel-precise" data-panel="precise">
+          <div class="panel-hero precise-hero">
+            <p class="eyebrow">Chapitre 05 · Precise Exceptions</p>
+            <h1>Terminer hors ordre,<br>rester exact.</h1>
+            <p class="lead">Le calcul peut finir quand il veut. L’état visible, lui, doit avancer dans l’ordre du programme : c’est le rôle du ROB, du commit et des mécanismes de récupération.</p>
+            <div class="hero-actions"><button class="btn" data-scroll="precise-1" type="button">Voir la frontière précise</button><a class="btn secondary" href="../Docs%20Cours/onur-ddca-2025-lecture13-precise-exceptions-afterlecture.pdf" target="_blank" rel="noopener">Support original · 72 p. ↗</a></div>
+          </div>
+          <div class="source-banner"><span>Source principale : <strong>Onur Mutlu — Pipelining and Precise Exceptions</strong></span><span>72 pages lues · annexes incluses</span></div>
+          <div class="focus-only core-idea"><strong>Phrase à savoir réciter</strong>Pour une faute sur I<sub>k</sub>, toutes les instructions plus anciennes sont committées ; I<sub>k</sub> et toutes les plus jeunes ne le sont pas.</div>
+
+          <article class="lesson searchable" id="precise-1" data-lesson="precise-1" data-title="Exception précise interruption completion retirement commit" data-panel-id="precise">
+            <header class="lesson-head"><span class="lesson-index">5.1</span><div class="lesson-title-wrap"><h2>La frontière qui sauve la sémantique</h2><p>Completion ≠ retirement</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 5.1 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="core-idea"><strong>État précis au niveau de I<sub>k</sub></strong>L’état architectural est exactement celui obtenu après I<sub>0</sub>…I<sub>k−1</sub>, avant I<sub>k</sub>. Une ADD jeune peut avoir fini ; tant qu’elle n’a pas committé, son résultat reste jetable.</div>
+              <div class="two-col"><div><h3>Exception</h3><p>Cause interne et synchrone : division par zéro, overflow, opcode inconnu, protection, page fault. Elle est mémorisée à la détection, mais prise seulement quand l’instruction atteint la tête.</p></div><div><h3>Interruption</h3><p>Événement généralement externe et asynchrone : E/S, timer, panne. Le processeur choisit une frontière propre entre deux instructions ; il n’existe pas forcément d’instruction fautive.</p></div></div>
+              <div class="simulator precision-frontier" id="precision-frontier" data-step="0">
+                <div class="simulator-head"><div><h3>Place la frontière précise</h3><p>Une DIV ancienne lève une faute après que des ADD jeunes ont terminé.</p></div><span class="tag coral">Animé</span></div>
+                <div class="instruction-stack" aria-label="Instructions autour d’une exception"><div class="precision-inst old" data-precision-index="0"><span>I₀</span><strong>LOAD R1</strong><small>ancienne</small></div><div class="precision-inst fault" data-precision-index="1"><span>I₁</span><strong>DIV R4 ← R1/R0</strong><small>faute</small></div><div class="precision-inst young" data-precision-index="2"><span>I₂</span><strong>ADD R3 ← R5+R6</strong><small>déjà terminée</small></div><div class="precision-inst young" data-precision-index="3"><span>I₃</span><strong>STORE [A] ← R3</strong><small>spéculative</small></div></div>
+                <p class="sim-status" id="precision-status" role="status">Étape 1/4 · les unités exécutent avec des latences différentes.</p>
+                <div class="request-controls"><button class="btn" id="precision-next" type="button">Étape suivante</button><button class="btn ghost" id="precision-reset" type="button">Recommencer</button></div>
+              </div>
+              <div class="exam-tip"><strong>Les trois verbes</strong><em>Execute</em> calcule ; <em>complete</em> dépose résultat/statut spéculatif ; <em>retire/commit</em> rend l’effet architectural. Une entrée prête peut attendre longtemps derrière la tête du ROB.</div>
+              <div class="lesson-source">PDF p. 5–19 et 24 · <a href="../Docs%20Cours/onur-ddca-2025-lecture13-precise-exceptions-afterlecture.pdf#page=16" target="_blank" rel="noopener">Définition originale</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="precise-2" data-lesson="precise-2" data-title="MIPS EPC Cause handler exception 0x80000180 mfc0" data-panel-id="precise">
+            <header class="lesson-head"><span class="lesson-index">5.2</span><div class="lesson-title-wrap"><h2>De la faute au handler</h2><p>EPC, Cause, flush et redirection</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 5.2 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="pipeline-strip"><div class="pipeline-block"><strong>1 · détecter</strong><small>mémoriser la cause</small></div><div class="pipeline-block"><strong>2 · attendre</strong><small>I<sub>k</sub> devient la plus ancienne</small></div><div class="pipeline-block"><strong>3 · vider</strong><small>supprimer les jeunes</small></div><div class="pipeline-block"><strong>4 · sauver</strong><small>EPC + état ISA</small></div><div class="pipeline-block"><strong>5 · rediriger</strong><small>vecteur du handler</small></div><div class="pipeline-block"><strong>6 · reprendre</strong><small>ou terminer</small></div></div>
+              <div class="three-col deep-dive"><div class="card"><span class="tag">EPC</span><p>PC de l’instruction fautive dans le datapath MIPS simplifié.</p></div><div class="card"><span class="tag coral">Cause</span><p>Opcode indéfini : <strong>0x28</strong> ; overflow : <strong>0x30</strong>, valeurs propres à cet exemple.</p></div><div class="card"><span class="tag blue">Vecteur</span><p>Le mux du PC choisit <strong>0x80000180</strong>. <code>mfc0</code> lit Cause/EPC ; d’autres MIPS utilisent aussi <code>eret</code>.</p></div></div>
+              <div class="warning"><strong>Nuance de copie d’examen</strong>« Sauver tous les registres » est un raccourci. Le matériel sauve le minimum défini par l’ISA ; le handler logiciel protège ensuite les registres dont il a besoin.</div>
+              <div class="lesson-source">PDF p. 17 et 20–23 · <a href="../Docs%20Cours/onur-ddca-2025-lecture13-precise-exceptions-afterlecture.pdf#page=21" target="_blank" rel="noopener">Datapath MIPS</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="precise-3" data-lesson="precise-3" data-title="Reorder Buffer ROB file circulaire allocation completion commit champs" data-panel-id="precise">
+            <header class="lesson-head"><span class="lesson-index">5.3</span><div class="lesson-title-wrap"><h2>Le ROB : désordre dedans, ordre dehors</h2><p>Allouer → compléter → committer</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 5.3 comme comprise"></button></header>
+            <div class="lesson-body">
+              <p>Le ROB est une file circulaire allouée dans l’ordre. Les résultats peuvent y arriver dans n’importe quel ordre, mais seule la tête peut partir. S’il est plein, le frontend s’arrête.</p>
+              <div class="simulator rob-lab" id="rob-lab" data-step="0"><div class="simulator-head"><div><h3>Mini-ROB · quatre instructions</h3><p>Observe le blocage de tête et le flush précis.</p></div><span class="tag">Manipule</span></div><div class="rob-track" aria-label="Quatre entrées du Reorder Buffer"><div class="rob-slot" data-rob="0"><span>#0 · DIV</span><strong>en cours</strong><small>tête</small></div><div class="rob-slot" data-rob="1"><span>#1 · ADD</span><strong>en cours</strong><small>jeune</small></div><div class="rob-slot" data-rob="2"><span>#2 · MUL</span><strong>en cours</strong><small>jeune</small></div><div class="rob-slot" data-rob="3"><span>#3 · STORE</span><strong>en cours</strong><small>queue</small></div></div><p class="sim-status" id="rob-status" role="status">Cycle logique 0 · aucune instruction n’est encore prête.</p><div class="request-controls"><button class="btn" id="rob-next" type="button">Événement suivant</button><button class="btn ghost" id="rob-reset" type="button">Réinitialiser</button></div></div>
+              <div class="deep-dive"><h3>Ce qu’une entrée doit mémoriser</h3><p>Validité et âge, PC, destination, valeur ou pointeur, statut prêt/terminé, exception et cause ; pour un store, adresse et donnée. Une réalisation moderne place souvent les valeurs dans un PRF et garde surtout ordre/statut dans le ROB.</p><h3>Où lire une valeur non committée ?</h3><p>Soit recherche associative du plus jeune producteur dans le ROB — CAM coûteuse — soit indirection : le RAT fournit directement un tag ROB ou registre physique, complété par le forwarding.</p></div>
+              <div class="exam-tip"><strong>Head-of-line blocking</strong>Une instruction jeune prête ne peut pas committer avant une ancienne instruction longue. Ce choix est précisément ce qui préserve l’ordre architectural.</div>
+              <div class="lesson-source">PDF p. 27–34 et 41–42 · <a href="../Docs%20Cours/onur-ddca-2025-lecture13-precise-exceptions-afterlecture.pdf#page=28" target="_blank" rel="noopener">Structure du ROB</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="precise-4" data-lesson="precise-4" data-title="renommage RAW WAR WAW RAT Future File History Buffer Future Map" data-panel-id="precise">
+            <header class="lesson-head"><span class="lesson-index">5.4</span><div class="lesson-title-wrap"><h2>Renommer les valeurs, pas les dépendances vraies</h2><p>RAW reste ; WAR et WAW disparaissent</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 5.4 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="three-col"><div class="card"><span class="tag coral">RAW</span><h3>Read after Write</h3><p>Le consommateur veut la valeur du producteur : vraie dépendance, impossible à supprimer.</p></div><div class="card"><span class="tag blue">WAR</span><h3>Write after Read</h3><p>Collision de noms entre une lecture ancienne et une écriture jeune : supprimée par renommage.</p></div><div class="card"><span class="tag gold">WAW</span><h3>Write after Write</h3><p>Deux définitions du même nom architectural : deux destinations physiques, donc plus de faux ordre.</p></div></div>
+              <div class="deep-dive"><h3>Exercice canonique</h3><pre class="code-block"><code>I0 MUL R1,R2 → R3 · R3→ROB0&#10;I1 MUL R3,R4 → R11 · lit ROB0 ; R11→ROB1&#10;I2 ADD R5,R6 → R3 · R3→ROB2 ; indépendante de I0&#10;I3 ADD R3,R8 → R12 · lit ROB2 ; R12→ROB3</code></pre><p>Les seules RAW sont I0→I1 et I2→I3. I2 peut dépasser I1 malgré le nom R3 réutilisé.</p></div>
+              <div class="table-scroll"><table class="compare-table"><thead><tr><th>Méthode</th><th>Conserve</th><th>État normal</th><th>Récupération</th></tr></thead><tbody><tr><td>ROB</td><td>nouvelles valeurs</td><td>RF committé</td><td>jeter les jeunes</td></tr><tr><td>History Buffer</td><td>anciennes valeurs</td><td>RF mis à jour tôt</td><td>undo en ordre inverse</td></tr><tr><td>Future File + ROB</td><td>deux jeux de valeurs</td><td>frontend spéculatif + backend précis</td><td>copier Arch → Future</td></tr><tr><td>Future Map</td><td>deux jeux de pointeurs</td><td>PRF + deux RAT</td><td>restaurer le mapping</td></tr></tbody></table></div>
+              <div class="lesson-source">PDF p. 37–40 et 50–59 · <a href="../Docs%20Cours/onur-ddca-2025-lecture13-precise-exceptions-afterlecture.pdf#page=51" target="_blank" rel="noopener">Comparer les mécanismes</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="precise-5" data-lesson="precise-5" data-title="mauvaise prédiction checkpoint store buffer mémoire précise forwarding" data-panel-id="precise">
+            <header class="lesson-head"><span class="lesson-index">5.5</span><div class="lesson-title-wrap"><h2>Récupérer une branche et protéger la mémoire</h2><p>Checkpoints, store queue et forwarding</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 5.5 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="two-col"><div><h3>Mauvaise prédiction</h3><p>Invisible au logiciel et fréquente : dès que la branche est résolue, restaurer son checkpoint RAT/Future Map, supprimer ses jeunes et fetcher le bon chemin. Inutile d’attendre la tête du ROB.</p></div><div><h3>Exception</h3><p>Visible architecturalement : mémoriser la faute puis attendre que l’instruction fautive soit la plus ancienne, afin de livrer l’état séquentiel exact au handler.</p></div></div>
+              <div class="core-idea"><strong>Pourquoi mettre à jour les checkpoints ?</strong>Si une instruction plus ancienne que la branche termine après la création du snapshot, sa valeur ou son mapping doit entrer dans tous les checkpoints plus jeunes ; sinon l’état restauré serait trop ancien.</div>
+              <div class="deep-dive"><h3>Un store spéculatif ne s’annule pas facilement</h3><p>Adresse et donnée restent dans une store queue en ordre programme. Le store ne touche cache/mémoire qu’au commit. Une load choisit la plus jeune store plus ancienne qui correspond ; si une adresse ancienne est inconnue, elle attend ou spécule avec détection de violation et rejeu.</p></div>
+              <div class="warning"><strong>Précis ne veut pas dire sans traces</strong>L’état architectural est restauré. Le support ne promet pas d’effacer toutes les traces microarchitecturales spéculatives dans caches ou prédicteurs.</div>
+              <div class="lesson-source">PDF p. 60–71 · <a href="../Docs%20Cours/onur-ddca-2025-lecture13-precise-exceptions-afterlecture.pdf#page=65" target="_blank" rel="noopener">Checkpoints</a> · <a href="../Docs%20Cours/onur-ddca-2025-lecture13-precise-exceptions-afterlecture.pdf#page=70" target="_blank" rel="noopener">Mémoire précise</a></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="course-panel" id="panel-ooo" data-panel="ooo">
+          <div class="panel-hero ooo-hero">
+            <p class="eyebrow">Chapitre 06 · Out-of-Order Execution</p>
+            <h1>Suivre les données,<br>pas la file d’attente.</h1>
+            <p class="lead">Une instruction bloquée sort du chemin et attend dans une station de réservation. Les instructions indépendantes avancent ; le ROB remet ensuite les effets dans l’ordre.</p>
+            <div class="hero-actions"><button class="btn" data-scroll="ooo-1" type="button">Débloquer le pipeline</button><a class="btn secondary" href="../Docs%20Cours/onur-ddca-2025-lecture14-out-order-execution-afterlecture.pdf" target="_blank" rel="noopener">Support original · 114 p. ↗</a></div>
+          </div>
+          <div class="source-banner"><span>Source principale : <strong>Onur Mutlu — Out-of-Order Execution</strong></span><span>114 pages · simulation Tomasulo incluse</span></div>
+          <div class="focus-only core-idea"><strong>Les quatre briques</strong>Renommer le lien producteur→consommateur ; garder les non-prêtes ; diffuser la disponibilité ; réveiller et sélectionner une prête.</div>
+
+          <article class="lesson searchable" id="ooo-1" data-lesson="ooo-1" data-title="dispatch in order blocage station réservation out of order" data-panel-id="ooo">
+            <header class="lesson-head"><span class="lesson-index">6.1</span><div class="lesson-title-wrap"><h2>Pourquoi le ROB seul ne suffit pas</h2><p>Le bouchon du dispatch in-order</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 6.1 comme comprise"></button></header>
+            <div class="lesson-body">
+              <p>Si la prochaine instruction attend une multiplication ou un cache miss, le dispatch dans l’ordre la bloque — et bloque aussi toutes les instructions indépendantes derrière. Le compilateur masque une latence connue, mais pas toujours un miss variable.</p>
+              <div class="simulator ooo-road" id="ooo-road" data-mode="inorder"><div class="simulator-head"><div><h3>La voie des instructions</h3><p>Passe en OoO pour envoyer l’ADD indépendante autour du miss.</p></div><span class="tag blue">Interactif</span></div><div class="ooo-lanes"><div class="ooo-lane"><span class="ooo-token blocked">LD · miss</span><span class="ooo-token waiting">ADD dépendante</span><span class="ooo-token independent">ADD indépendante</span><span class="ooo-token independent">MUL indépendante</span></div><div class="reservation-zone"><strong>Station de réservation</strong><small>les non-prêtes attendent hors du chemin</small></div></div><p class="sim-status" id="ooo-road-status">In-order · l’ADD dépendante empêche les deux instructions prêtes de passer.</p><div class="request-controls"><button class="btn" id="ooo-road-toggle" type="button">Activer l’ordonnancement OoO</button></div></div>
+              <div class="core-idea"><strong>Les deux bosses</strong>Fetch/Decode dans l’ordre → RS/issue queue → exécution hors ordre → ROB → retirement dans l’ordre. La première bosse désordonne, la seconde réordonne.</div>
+              <div class="lesson-source">PDF p. 9–26 · <a href="../Docs%20Cours/onur-ddca-2025-lecture14-out-order-execution-afterlecture.pdf#page=22" target="_blank" rel="noopener">16 cycles contre 12</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="ooo-2" data-lesson="ooo-2" data-title="Tomasulo RAT reservation station CDB broadcast wakeup select" data-panel-id="ooo">
+            <header class="lesson-head"><span class="lesson-index">6.2</span><div class="lesson-title-wrap"><h2>Tomasulo en six actions</h2><p>Tag, attente, diffusion, réveil</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 6.2 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="pipeline-strip"><div class="pipeline-block"><strong>1 · réserver</strong><small>une RS adaptée</small></div><div class="pipeline-block"><strong>2 · renommer</strong><small>sources avant destination</small></div><div class="pipeline-block"><strong>3 · attendre</strong><small>valeur ou tag par source</small></div><div class="pipeline-block"><strong>4 · wakeup</strong><small>toutes sources prêtes</small></div><div class="pipeline-block"><strong>5 · select</strong><small>arbitrer la FU</small></div><div class="pipeline-block"><strong>6 · broadcast</strong><small>tag + valeur</small></div></div>
+              <div class="two-col"><div><h3>RAT</h3><p>Pour chaque registre : valeur valide ou tag du producteur. Le tag nomme une valeur unique. À la diffusion, mettre à jour le RAT seulement si son tag courant correspond encore : une définition plus jeune ne doit jamais être écrasée.</p></div><div><h3>RS + CDB</h3><p>Chaque opérande non prêt compare son tag au résultat diffusé. Une correspondance capture la valeur. Quand toutes les sources sont valides, l’instruction entre dans le groupe des candidates.</p></div></div>
+              <div class="exam-tip"><strong>Ordre de renommage décisif</strong>Pour <code>ADD R5,R5,R1</code>, lire d’abord l’ancien mapping source de R5, puis seulement installer le nouveau mapping destination.</div>
+              <div class="deep-dive"><p>Chemin critique : broadcast → comparaison/capture → wakeup → select. Davantage de bus augmente le débit mais multiplie fils et comparateurs. RS centralisée = partage flexible mais CAM globale ; RS distribuées = chemins courts mais fragmentation possible.</p></div>
+              <div class="lesson-source">PDF p. 23–35 et 64–69 · <a href="../Docs%20Cours/onur-ddca-2025-lecture14-out-order-execution-afterlecture.pdf#page=34" target="_blank" rel="noopener">Algorithme du support</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="ooo-3" data-lesson="ooo-3" data-title="simulation Tomasulo cycle RAT RS x a b c y d" data-panel-id="ooo">
+            <header class="lesson-head"><span class="lesson-index">6.3</span><div class="lesson-title-wrap"><h2>La simulation Tomasulo, cycle par cycle</h2><p>Six instructions, deux branches du graphe</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 6.3 comme comprise"></button></header>
+            <div class="lesson-body">
+              <pre class="code-block"><code>I1 x: MUL R1,R2 → R3     I2 a: ADD R3,R4 → R5&#10;I3 b: ADD R2,R6 → R7     I4 c: ADD R8,R9 → R10&#10;I5 y: MUL R7,R10 → R11   I6 d: ADD R5,R11 → R5</code></pre>
+              <div class="simulator tomasulo-lab" id="tomasulo-lab"><div class="simulator-head"><div><h3>Curseur des 21 états</h3><p>ADD : 4 cycles E · MUL : 6 cycles E · bus séparés.</p></div><span class="tag coral">Cycle <b id="tomasulo-cycle-label">0</b></span></div><label class="range-label" for="tomasulo-cycle">Cycle 0 à 20<input id="tomasulo-cycle" type="range" min="0" max="20" value="0"></label><div class="tomasulo-board"><div><h3>Événement</h3><p id="tomasulo-event" role="status">Machine vide ; tous les registres R1…R11 contiennent leur numéro.</p></div><div><h3>Mappings importants</h3><div class="rat-pills" id="tomasulo-rat"><span>R3: valeur</span><span>R5: valeur</span><span>R7: valeur</span><span>R10: valeur</span><span>R11: valeur</span></div></div></div><div class="request-controls"><button class="btn ghost" id="tomasulo-prev" type="button">←</button><button class="btn" id="tomasulo-next" type="button">Cycle suivant</button><button class="btn ghost" id="tomasulo-play" type="button">Lecture auto</button></div></div>
+              <div class="core-idea"><strong>Moment-piège : R5</strong>I2 produit <code>a=6</code>, capturé par I6. Mais R5 a déjà été renommé vers <code>d</code> : le RAT reste R5→d. À la fin, d=6+136=142.</div>
+              <div class="deep-dive"><p>Chronogramme : x F1 D2 E3–8 W9 ; a F2 D3 attend4–8 E9–12 W13 ; b F3 D4 E5–8 W9 ; c F4 D5 E6–9 W10 ; y F5 D6 attend7–9 E10–15 W16 ; d F6 D7 attend8–15 E16–19 W20.</p></div>
+              <div class="lesson-source">PDF p. 39–68 · <a href="../Docs%20Cours/onur-ddca-2025-lecture14-out-order-execution-afterlecture.pdf#page=40" target="_blank" rel="noopener">Début de la simulation</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="ooo-4" data-lesson="ooo-4" data-title="PRF physical register file ROB retirement RAT performance 31 25 20" data-panel-id="ooo">
+            <header class="lesson-head"><span class="lesson-index">6.4</span><div class="lesson-title-wrap"><h2>L’organisation moderne et son vrai coût</h2><p>PRF, deux maps et fenêtre bornée</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 6.4 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="two-col"><div><h3>Frontend / Future Map</h3><p>Mappings spéculatifs lus au renommage. Une nouvelle destination reçoit un registre physique libre ; RS et consommateurs gardent les tags physiques.</p></div><div><h3>Retirement / Architectural Map</h3><p>Mappings validés, mis à jour au commit. Le ROB garde ordre, destination, ancienne destination, état et exception ; l’ancien PR n’est libéré que lorsqu’il est réellement mort.</p></div></div>
+              <div class="three-col"><div class="card"><strong class="metric">31 cycles</strong><p>In-order, sans forwarding.</p></div><div class="card"><strong class="metric">25 cycles</strong><p>In-order, avec forwarding.</p></div><div class="card"><strong class="metric">20 cycles</strong><p>OoO, avec forwarding.</p></div></div>
+              <div class="warning"><strong>Coquille de la p. 36</strong>Le texte annonce MUL=6 cycles E, mais un dessin et « 50 cycles » en supposent 8. Avec les latences réellement utilisées ensuite, la somme séquentielle vaut <strong>46 cycles</strong> : 4×7 + 2×9. Les chronogrammes 31/25/20 suivent bien MUL=6.</div>
+              <div class="deep-dive"><p>La fenêtre est bornée par ROB, RS/IQ, PR libres et largeurs fetch/issue/retire. Une opération de 1 000 cycles finit par remplir le ROB ; une grande fenêtre n’aide pas si le graphe contient une chaîne RAW.</p></div>
+              <div class="lesson-source">PDF p. 36–38, 70–101 · <a href="../Docs%20Cours/onur-ddca-2025-lecture14-out-order-execution-afterlecture.pdf#page=79" target="_blank" rel="noopener">PRF et deux maps</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="ooo-5" data-lesson="ooo-5" data-title="LSQ load queue store queue memory disambiguation forwarding violation replay" data-panel-id="ooo">
+            <header class="lesson-head"><span class="lesson-index">6.5</span><div class="lesson-title-wrap"><h2>La mémoire : les noms arrivent trop tard</h2><p>LSQ, désambiguïsation et replay</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 6.5 comme comprise"></button></header>
+            <div class="lesson-body">
+              <p>Les dépendances registre sont visibles au décodage. Pour la mémoire, l’adresse n’existe qu’après calcul : une load jeune peut être prête alors qu’une store ancienne a encore une adresse inconnue.</p>
+              <div class="three-col memory-policy"><button class="card policy-btn active" data-memory-policy="conservative" type="button"><span class="tag">Prudent</span><h3>Attendre</h3><p>Zéro violation, parallélisme perdu.</p></button><button class="card policy-btn" data-memory-policy="aggressive" type="button"><span class="tag coral">Agressif</span><h3>Supposer indépendant</h3><p>Rapide, mais replay nécessaire.</p></button><button class="card policy-btn" data-memory-policy="predictive" type="button"><span class="tag blue">Prédictif</span><h3>Apprendre l’alias</h3><p>Retarder seulement les loads à risque.</p></button></div>
+              <div class="sim-status policy-result" id="memory-policy-result">La load attend toutes les adresses des stores plus anciennes : sûr, parfois très lent.</div>
+              <div class="core-idea"><strong>Règle de forwarding</strong>Dans la SQ, choisir la <em>plus jeune store parmi celles qui sont plus anciennes que la load</em>, avec chevauchement des octets. Si sa donnée n’est pas prête, attendre ; sinon forwarder. Une store calculée tard cherche les loads jeunes déjà exécutées et déclenche leur rejeu en cas de violation.</div>
+              <div class="deep-dive"><p>Cas difficiles : tailles/alignements différents, plages partiellement superposées, fusion de plusieurs stores et du cache. Cela demande recherche CAM par adresse, priorité par âge et logique de fusion. Les Store Sets prédisent les dépendances répétitives.</p></div>
+              <div class="lesson-source">Backup slides PDF p. 102–114 · <a href="../Docs%20Cours/onur-ddca-2025-lecture14-out-order-execution-afterlecture.pdf#page=106" target="_blank" rel="noopener">Unknown-address problem</a></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="course-panel" id="panel-multicore" data-panel="multicore">
+          <div class="panel-hero multicore-hero">
+            <p class="eyebrow">Chapitre 07 · Processeurs multicœurs</p>
+            <h1>Plusieurs cœurs,<br>une mémoire cohérente.</h1>
+            <p class="lead">Le multicœur déplace la difficulté vers le logiciel, le placement des données et les communications. Amdahl borne le gain ; MSI empêche les caches de raconter des histoires différentes.</p>
+            <div class="hero-actions"><button class="btn" data-scroll="multicore-1" type="button">Calculer une accélération</button><a class="btn secondary" href="../Docs%20Cours/slides_multicores-v1.0-student.pdf" target="_blank" rel="noopener">Support original · 42 p. ↗</a></div>
+          </div>
+          <div class="source-banner"><span>Source principale : <strong>César Fuguet — Processeurs multicœurs</strong></span><span>29 diapositives logiques · animations consolidées</span></div>
+          <div class="focus-only core-idea"><strong>Fil rouge</strong>Mémoire partagée → copies dans plusieurs caches → cohérence → atomiques → contention. Ajouter des cœurs n’efface ni la partie séquentielle ni les communications.</div>
+
+          <article class="lesson searchable" id="multicore-1" data-lesson="multicore-1" data-title="multicœur ILP TLP DLP Flynn Amdahl speedup fraction parallèle" data-panel-id="multicore">
+            <header class="lesson-head"><span class="lesson-index">7.1</span><div class="lesson-title-wrap"><h2>Quel parallélisme, quel gain réel ?</h2><p>ILP, TLP, DLP et loi d’Amdahl</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 7.1 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="three-col"><div class="card"><span class="tag">ILP · SISD</span><h3>Instructions</h3><p>Plusieurs instructions d’un même flot : superscalaire et OoO.</p></div><div class="card"><span class="tag blue">TLP · MIMD</span><h3>Tâches</h3><p>Plusieurs flots sur plusieurs cœurs : travail parallèle ou requêtes distinctes.</p></div><div class="card"><span class="tag coral">DLP · SIMD</span><h3>Données</h3><p>Même opération appliquée à plusieurs éléments : vecteurs et GPU.</p></div></div>
+              <div class="simulator amdahl-lab" id="amdahl-lab"><div class="simulator-head"><div><h3>Laboratoire d’Amdahl</h3><p>Taille de problème fixe, partage idéal, sans surcoût.</p></div><span class="tag gold">S = 1 / ((1−p)+p/N)</span></div><div class="control-row"><label for="amdahl-p">Part parallèle p</label><input id="amdahl-p" type="range" min="0" max="100" value="95"><output id="amdahl-p-out">95 %</output></div><div class="control-row"><label for="amdahl-n">Nombre de cœurs N</label><input id="amdahl-n" type="range" min="1" max="128" value="16"><output id="amdahl-n-out">16</output></div><div class="two-col"><div class="big-result"><span>Accélération</span><strong id="amdahl-speedup">9,14×</strong></div><div class="big-result"><span>Limite N→∞</span><strong id="amdahl-limit">20×</strong></div></div></div>
+              <div class="two-col deep-dive"><div><h3>Une tâche divisible</h3><span class="formula">T<sub>multi,min</sub> = T<sub>mono</sub>/N</span></div><div><h3>N processus indépendants</h3><span class="formula">T<sub>multi,min</sub> = max(T<sub>i</sub>)</span><p>Le speedup vaut ΣT<sub>i</sub>/max(T<sub>i</sub>) ≤ N.</p></div></div>
+              <div class="exam-tip"><strong>Exercices du support</strong>Pour S≥75 avec N=100 : partie séquentielle ≤0,337 %, donc p≥99,663 %. Accélérer ×2 seulement 20 % du programme donne 1/(0,8+0,1)=1,111×.</div>
+              <div class="lesson-source">PDF p. 4–15 · <a href="../Docs%20Cours/slides_multicores-v1.0-student.pdf#page=13" target="_blank" rel="noopener">Courbes d’Amdahl</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="multicore-2" data-lesson="multicore-2" data-title="distributed memory SMP UMA DSM NUMA organisation mémoire placement" data-panel-id="multicore">
+            <header class="lesson-head"><span class="lesson-index">7.2</span><div class="lesson-title-wrap"><h2>Trois façons de placer la mémoire</h2><p>Messages, UMA et NUMA</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 7.2 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="table-scroll"><table class="compare-table"><thead><tr><th>Organisation</th><th>Vue</th><th>Communication</th><th>Piège</th></tr></thead><tbody><tr><td>Distribuée non partagée</td><td>une mémoire locale par cœur</td><td>messages explicites</td><td>un cœur ne charge pas directement chez l’autre</td></tr><tr><td>SMP / UMA</td><td>espace partagé centralisé</td><td>loads/stores partagés</td><td>contention du point central</td></tr><tr><td>DSM / NUMA</td><td>espace partagé, placement physique réparti</td><td>réseau cohérent</td><td>coût local ≠ coût distant</td></tr></tbody></table></div>
+              <div class="simulator memory-org-lab"><div class="simulator-head"><div><h3>Déplace une donnée</h3><p>La même adresse logique n’implique pas la même distance physique.</p></div></div><div class="request-controls"><button class="btn ghost org-btn active" data-org="distributed" type="button">Distribuée</button><button class="btn ghost org-btn" data-org="uma" type="button">UMA</button><button class="btn ghost org-btn" data-org="numa" type="button">NUMA</button></div><div class="memory-org-map" id="memory-org-map"><span class="core-node">Cœur 0</span><span class="core-node">Cœur 1</span><span class="network-node">réseau</span><span class="memory-node">M₀ locale</span><span class="memory-node">M₁ locale</span></div><p class="sim-status" id="memory-org-status">Mémoire distribuée : pour obtenir M₁, Cœur 0 doit demander un message à Cœur 1.</p></div>
+              <div class="core-idea"><strong>Règle NUMA</strong>Placer une tâche sans rapprocher ses données peut annuler le gain du parallélisme. « Distributed memory » et « distributed shared memory » ne sont pas synonymes.</div>
+              <div class="lesson-source">PDF p. 17–22 · <a href="../Docs%20Cours/slides_multicores-v1.0-student.pdf#page=17" target="_blank" rel="noopener">Organisations mémoire</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="multicore-3" data-lesson="multicore-3" data-title="cohérence cache write through write back obsolescence dirty" data-panel-id="multicore">
+            <header class="lesson-head"><span class="lesson-index">7.3</span><div class="lesson-title-wrap"><h2>Quand deux caches lisent deux vérités</h2><p>Obsolescence des copies et de la mémoire</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 7.3 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="simulator coherence-lab" id="coherence-lab"><div class="simulator-head"><div><h3>Écriture write-back de P0</h3><p>Adresse @FF0, valeur initiale BABEF00D.</p></div><span class="tag coral">Cohérence</span></div><div class="coherence-copies"><div class="cache-copy" data-copy="p0"><span>Cache P0 · V=1 D=0</span><strong>BABEF00D</strong></div><div class="cache-copy" data-copy="p1"><span>Cache P1 · V=1 D=0</span><strong>BABEF00D</strong></div><div class="cache-copy memory-copy" data-copy="mem"><span>Mémoire</span><strong>BABEF00D</strong></div></div><div class="request-controls"><button class="btn" id="coherence-write" type="button">P0 écrit DEADBEEF</button><button class="btn ghost" id="coherence-reset" type="button">Réinitialiser</button></div><p class="sim-status" id="coherence-status">Les trois copies sont cohérentes.</p></div>
+              <div class="two-col"><div><h3>Write-through</h3><p>Cache et niveau inférieur sont écrits ensemble. La mémoire reste à jour, mais un autre cache peut encore être obsolète.</p></div><div><h3>Write-back</h3><p>Seule la ligne locale devient dirty ; mémoire et autres caches peuvent être obsolètes jusqu’au write-back/intervention.</p></div></div>
+              <div class="warning"><strong>Cohérence ≠ consistance ≠ atomicité</strong>La cohérence impose un ordre sensé des écritures pour une adresse. Elle ne remplace ni un verrou ni les règles d’ordre mémoire entre adresses différentes.</div>
+              <div class="lesson-source">PDF p. 24–28 · <a href="../Docs%20Cours/slides_multicores-v1.0-student.pdf#page=27" target="_blank" rel="noopener">Séquence animée</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="multicore-4" data-lesson="multicore-4" data-title="MSI Modified Shared Invalid snooping RM WM IV WB transition" data-panel-id="multicore">
+            <header class="lesson-head"><span class="lesson-index">7.4</span><div class="lesson-title-wrap"><h2>MSI : partager, invalider, restituer</h2><p>Automate write-invalidate + write-back</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 7.4 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="three-col"><div class="card state-card modified"><span class="tag coral">M</span><h3>Modified</h3><p>Unique copie valide, dirty ; mémoire potentiellement obsolète.</p></div><div class="card state-card shared"><span class="tag blue">S</span><h3>Shared</h3><p>Copie propre ; plusieurs caches peuvent la posséder.</p></div><div class="card state-card invalid"><span class="tag">I</span><h3>Invalid</h3><p>Les bits stockés ne doivent pas être utilisés.</p></div></div>
+              <div class="core-idea"><strong>Invariant</strong>Plusieurs S sont permis. Un seul M est permis. M ne coexiste jamais avec une autre copie valide.</div>
+              <div class="table-scroll deep-dive"><table class="compare-table"><thead><tr><th>État + événement</th><th>Bus/action</th><th>Nouvel état</th></tr></thead><tbody><tr><td>I + lecture CPU</td><td>RM / BusRd</td><td>S</td></tr><tr><td>I + écriture CPU</td><td>WM / exclusif</td><td>M</td></tr><tr><td>S + lecture CPU</td><td>hit</td><td>S</td></tr><tr><td>S + écriture CPU</td><td>IV des autres</td><td>M</td></tr><tr><td>M + lecture distante</td><td>WB/flush</td><td>S</td></tr><tr><td>M + écriture distante</td><td>WB puis invalidation</td><td>I</td></tr><tr><td>M + éviction</td><td>WB</td><td>I</td></tr></tbody></table></div>
+              <div class="simulator msi-lab" id="msi-lab" data-step="0"><div class="simulator-head"><div><h3>Trace du bloc @410</h3><p>RM → IV → WM avec intervention du propriétaire M.</p></div><span class="tag">Pas à pas</span></div><div class="msi-caches"><div class="msi-node" data-msi="p0"><span>P0</span><strong>S · 0908 CAFE</strong></div><div class="msi-bus">bus : —</div><div class="msi-node" data-msi="p1"><span>P1</span><strong>S · 0908 CAFE</strong></div><div class="msi-node memory" data-msi="mem"><span>MEM</span><strong>0908 CAFE</strong></div></div><p class="sim-status" id="msi-status">Départ : P0 et P1 partagent @410.</p><div class="request-controls"><button class="btn" id="msi-next" type="button">Opération suivante</button><button class="btn ghost" id="msi-reset" type="button">Recommencer</button></div></div>
+              <div class="exam-tip"><strong>Trace à savoir expliquer</strong>P0 écrit @412 : IV, P0 S→M, P1 S→I. Puis P1 écrit @410 : WM ; P0 est M, donc WB avant M→I ; P1 reçoit la ligne et devient M.</div>
+              <div class="lesson-source">PDF p. 29–34 et exercice p. 38–39 · <a href="../Docs%20Cours/slides_multicores-v1.0-student.pdf#page=30" target="_blank" rel="noopener">Automate MSI</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="multicore-5" data-lesson="multicore-5" data-title="snooping directory répertoire scalabilité Skylake CHA snoop filter mesh" data-panel-id="multicore">
+            <header class="lesson-head"><span class="lesson-index">7.5</span><div class="lesson-title-wrap"><h2>Du broadcast au répertoire</h2><p>Passer de tous les caches aux seuls détenteurs</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 7.5 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="two-col"><div class="card"><span class="tag coral">Snooping</span><p>Chaque cache observe toutes les transactions ; réseau broadcast obligatoire. Simple et rapide à petite échelle, mais trafic, activité des caches et énergie croissent avec N.</p></div><div class="card"><span class="tag blue">Répertoire</span><p>Pour chaque ligne, mémorise les détenteurs. La requête va au home/directory, qui contacte seulement les k caches concernés. Répertoire et réseau peuvent être répartis.</p></div></div>
+              <span class="formula">snoop : communication ≈ O(N) · directory : ≈ O(k détenteurs) + stockage du répertoire</span>
+              <div class="deep-dive"><h3>Skylake serveur, exemple du cours</h3><p>Maillage de tuiles Core + L1/L2 + CHA/Snoop Filter/LLC, contrôleurs DDR4 latéraux, UPI, PCIe, DMI et CBDMA. Chiffres du transparent : 18 cœurs dessinés, 14 nm, ≈8 milliards de transistors, 13 couches métalliques, ≈485 mm².</p><p>Architecture hybride possible : snooping dans un petit cluster, répertoire entre clusters.</p></div>
+              <div class="warning"><strong>« 8 cœurs maximum »</strong>Le support donne cet ordre de grandeur pour du snooping pur ; ce n’est pas une loi physique universelle.</div>
+              <div class="lesson-source">PDF p. 22 et 35–40 · <a href="../Docs%20Cours/slides_multicores-v1.0-student.pdf#page=36" target="_blank" rel="noopener">Répertoires</a></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="course-panel" id="panel-sync" data-panel="sync">
+          <div class="panel-hero sync-hero">
+            <p class="eyebrow">Chapitre 08 · Synchronisation</p>
+            <h1>Une seule écriture,<br>même à plusieurs.</h1>
+            <p class="lead">Une ligne cohérente peut encore subir une race. Les atomiques construisent verrous, barrières et compteurs ; l’ordre acquire/release rend leurs effets utilisables.</p>
+            <div class="hero-actions"><button class="btn" data-scroll="sync-1" type="button">Provoquer une race</button><a class="btn secondary" href="../Docs%20Cours/slides_synchronisation-student.pdf" target="_blank" rel="noopener">Support original · 33 p. ↗</a></div>
+          </div>
+          <div class="source-banner"><span>Source principale : <strong>César Fuguet — Synchronisation dans les processeurs multicœurs</strong></span><span>26 diapositives logiques · exercices corrigés</span></div>
+          <div class="focus-only core-idea"><strong>À retenir</strong>Atomique = indivisible ; acquire/release = ordre et visibilité ; verrou = exclusion ; barrière = rendez-vous. Ce sont quatre idées différentes.</div>
+
+          <article class="lesson searchable" id="sync-1" data-lesson="sync-1" data-title="race condition lost update incrément atomicité RMW" data-panel-id="sync">
+            <header class="lesson-head"><span class="lesson-index">8.1</span><div class="lesson-title-wrap"><h2>Deux incréments, résultat 1</h2><p>La mise à jour perdue</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 8.1 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="simulator race-lab" id="race-lab"><div class="simulator-head"><div><h3>Ordonnance les deux tâches</h3><p>Chaque incrément est en réalité load + add + store.</p></div><span class="tag coral">x = <b id="race-value">0</b></span></div><div class="race-columns"><div><strong>Tâche A</strong><button class="race-step" data-thread="a" type="button">Exécuter l’étape A</button><small id="race-a-state">prête à lire</small></div><div><strong>Tâche B</strong><button class="race-step" data-thread="b" type="button">Exécuter l’étape B</button><small id="race-b-state">prête à lire</small></div></div><p class="sim-status" id="race-status">Essaie A, B, A, B, A, B : les deux lisent 0 et écrivent 1.</p><div class="request-controls"><button class="btn ghost" id="race-reset" type="button">Réinitialiser</button><button class="btn" id="race-atomic" type="button">Rendre chaque RMW atomique</button></div></div>
+              <div class="core-idea"><strong>Définition</strong>Une Read–Modify–Write atomique est insécable : aucun autre acteur ne peut observer/intercaler un état entre lecture, modification et écriture.</div>
+              <div class="warning"><strong>Piège</strong>Le fait que chaque instruction assembleur soit atomique ne rend pas automatiquement atomique une séquence <code>load; add; store</code>.</div>
+              <div class="lesson-source">PDF p. 4–10 · <a href="../Docs%20Cours/slides_synchronisation-student.pdf#page=5" target="_blank" rel="noopener">Entrelacements</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="sync-2" data-lesson="sync-2" data-title="RISC-V LR SC AMO atomic fetch add exchange reservation" data-panel-id="sync">
+            <header class="lesson-head"><span class="lesson-index">8.2</span><div class="lesson-title-wrap"><h2>LR/SC et AMO : les briques matérielles</h2><p>Réservation, tentative et boucle</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 8.2 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="two-col"><div><h3>LR/SC</h3><pre class="code-block"><code># a0=&obj, a1=operand&#10;retry: lr.w t0, 0(a0)&#10;       add  t1, t0, a1&#10;       sc.w t2, t1, 0(a0)&#10;       bnez t2, retry&#10;       mv a0, t0       # ancien</code></pre><p><code>sc.w</code> retourne 0 si l’écriture réussit, non-zéro sinon. Après échec, repartir au LR et recalculer.</p></div><div><h3>AMO</h3><pre class="code-block"><code>amoadd.w rd, rs2, (rs1)&#10;# rd ← ancienne mémoire&#10;# mémoire ← ancienne + rs2</code></pre><p>AMOSWAP, ADD, AND, OR, XOR, MIN/MAX réalisent directement une RMW ; <code>rd</code> reçoit toujours l’ancienne valeur.</p></div></div>
+              <div class="deep-dive"><h3>Correspondances C11/C++11</h3><p>exchange→AMOSWAP ; fetch_add→AMOADD ; AND/OR/XOR→AMO correspondante ; compare_exchange→boucle LR/SC ; flag test-and-set→AMOSWAP. Une CAS <em>weak</em> peut échouer transitoirement et s’emploie normalement en boucle.</p></div>
+              <div class="warning"><strong>Correction du transparent p. 16</strong>En RISC‑V, AMOMAX/AMOMIN sont <em>signés</em>. Les versions non signées s’appellent AMOMAXU/AMOMINU. Le support les étiquette à tort comme non signées.</div>
+              <div class="lesson-source">PDF p. 11–17 · <a href="../Docs%20Cours/slides_synchronisation-student.pdf#page=13" target="_blank" rel="noopener">LR/SC</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="sync-3" data-lesson="sync-3" data-title="spinlock verrou section critique test and set acquire release AMOSWAP" data-panel-id="sync">
+            <header class="lesson-head"><span class="lesson-index">8.3</span><div class="lesson-title-wrap"><h2>Construire un verrou qui verrouille vraiment</h2><p>Exclusion mutuelle et ordre mémoire</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 8.3 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="two-col"><div class="card"><span class="tag coral">Incorrect</span><pre class="code-block"><code>while (*lock != 0) {}&#10;*lock = 1;</code></pre><p>Deux tâches peuvent lire 0 avant leurs deux stores, puis entrer ensemble.</p></div><div class="card"><span class="tag">Correct</span><pre class="code-block"><code>li t0, 1&#10;retry: amoswap.w.aq t1,t0,(a0)&#10;       bnez t1, retry&#10;# section critique&#10;amoswap.w.rl x0,x0,(a0)</code></pre></div></div>
+              <div class="core-idea"><strong>Test-and-test-and-set</strong>Tourner d’abord avec de simples loads ; ne tenter l’AMOSWAP que lorsque le verrou semble libre. On réduit les écritures et invalidations inutiles de la ligne de cache.</div>
+              <div class="deep-dive"><p><strong>Acquire</strong> empêche les opérations de la section critique de remonter avant la prise. <strong>Release</strong> rend les écritures de la section visibles avant la libération. Atomicité et ordre mémoire ne sont pas synonymes.</p></div>
+              <div class="exam-tip"><strong>Section critique</strong>Prendre le verrou juste avant la ressource partagée et le relâcher sur tous les chemins de sortie. Un verrou trop gros sérialise ; trop fin complique ordre et interblocages.</div>
+              <div class="lesson-source">PDF p. 19–25 · <a href="../Docs%20Cours/slides_synchronisation-student.pdf#page=21" target="_blank" rel="noopener">Pourquoi load/store échoue</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="sync-4" data-lesson="sync-4" data-title="deadlock interblocage famine contention invalidation O N carré" data-panel-id="sync">
+            <header class="lesson-head"><span class="lesson-index">8.4</span><div class="lesson-title-wrap"><h2>Ne pas mourir en tenant un verrou</h2><p>Interblocage, famine et contention</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 8.4 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="deadlock-cycle"><span>T0 détient L0</span><b>→ attend</b><span>L1 détenu par T1</span><b>→ attend</b><span>L0</span></div>
+              <div class="core-idea"><strong>Casser le cycle</strong>Définir un ordre global total sur les verrous et toujours les acquérir dans cet ordre — par exemple L0 avant L1. Toutes les tâches obéissent à la même règle.</div>
+              <div class="three-col"><div class="card"><h3>Deadlock</h3><p>Personne n’avance : cycle d’attente.</p></div><div class="card"><h3>Famine</h3><p>Le système avance, mais une tâche peut perdre indéfiniment.</p></div><div class="card"><h3>Contention</h3><p>La ligne de verrou rebondit S/M/I et consomme réseau/cache.</p></div></div>
+              <div class="deep-dive"><p>Le modèle du cours conclut à un trafic <strong>O(N²)</strong> sous forte contention. C’est l’ordre de grandeur important.</p></div>
+              <div class="warning"><strong>Coquille arithmétique p. 27</strong>Les cinq sommes imprimées valent littéralement 2N², pas 2N²−2N. La conclusion asymptotique O(N²) reste juste ; n’invente pas une égalité exacte sans fixer le modèle de comptage.</div>
+              <div class="lesson-source">PDF p. 26–27 · <a href="../Docs%20Cours/slides_synchronisation-student.pdf#page=26" target="_blank" rel="noopener">Cycle d’attente</a></div>
+            </div>
+          </article>
+
+          <article class="lesson searchable" id="sync-5" data-lesson="sync-5" data-title="barrière compteur compare exchange CAS fetch add ticket lock FIFO" data-panel-id="sync">
+            <header class="lesson-head"><span class="lesson-index">8.5</span><div class="lesson-title-wrap"><h2>Rendez-vous et équité</h2><p>Barrière, CAS et ticket lock</p></div><button class="complete-btn" type="button" aria-label="Marquer la leçon 8.5 comme comprise"></button></header>
+            <div class="lesson-body">
+              <div class="two-col"><div><h3>Barrière compteur</h3><pre class="code-block"><code>barrier_wait(b):&#10;  atomic_fetch_sub(b, 1)&#10;  while (atomic_load(b) != 0) {}</code></pre><p>Aucune tâche ne passe avant la dernière. Cette version est à usage unique ; une barrière réutilisable exige génération/sense bit.</p></div><div><h3>Ticket lock</h3><pre class="code-block"><code>mine = fetch_add(last_ticket, 1)&#10;while (curr_ticket != mine) {}&#10;# section critique&#10;fetch_add(curr_ticket, 1)</code></pre><p>FIFO, donc équitable sous hypothèse de planification ; tous surveillent toutefois la même ligne.</p></div></div>
+              <div class="deep-dive"><h3>CAS puis fetch-add</h3><p>Compare-exchange lit <code>*obj</code>, le compare à <code>*expected</code>, écrit <code>desired</code> si égal et met toujours <code>*expected</code> à la valeur observée. Un fetch-add par CAS doit recalculer <code>desired=old+operand</code> après chaque échec.</p></div>
+              <div class="exam-tip"><strong>Checklist code atomique</strong>Tester le code retour de SC/CAS ; reboucler au bon endroit ; recalculer depuis la nouvelle valeur ; préciser valeur retournée ; ajouter acquire/release si le mécanisme synchronise d’autres données.</div>
+              <div class="lesson-source">PDF p. 28–33 · <a href="../Docs%20Cours/slides_synchronisation-student.pdf#page=31" target="_blank" rel="noopener">Exercices CAS et ticket lock</a></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="course-panel" id="panel-annales" data-panel="annales">
+          <div class="panel-hero annales-hero">
+            <p class="eyebrow">Entraînement prioritaire · 2014 à 2026</p>
+            <h1>Les annales,<br>corrigées comme une copie.</h1>
+            <p class="lead">Choisis une année ou un thème. L’énoncé du PDF est reproduit avant chaque réponse pour que tu voies exactement ce qui est demandé, puis la correction déroule chaque étape et la conclusion à écrire.</p>
+            <div class="hero-actions"><button class="btn" id="exam-open-first" type="button">Commencer par une question</button><button class="btn secondary" id="exam-random" type="button">Question au hasard</button></div>
+          </div>
+
+          <div class="stats-grid exam-stats" aria-label="Contenu des annales"><div class="stat"><strong>5</strong><span>sujets complets</span></div><div class="stat"><strong>83</strong><span>questions formelles</span></div><div class="stat"><strong>27</strong><span>pages d’énoncés</span></div><div class="stat"><strong>100 %</strong><span>corrigé et vérifié</span></div></div>
+
+          <div class="exam-method">
+            <div><span class="method-number">1</span><strong>Tente</strong><small>Écris les idées et formules sans aide.</small></div>
+            <div><span class="method-number">2</span><strong>Déroule</strong><small>Compare avec la réponse « copie d’examen ».</small></div>
+            <div><span class="method-number">3</span><strong>Répare</strong><small>Refais le calcul en masquant la correction.</small></div>
+          </div>
+
+          <div class="core-idea exam-depth-note"><strong>Nouvelle lecture guidée</strong>Une formule n’arrive jamais seule : les symboles sont définis, les valeurs sont remplacées ligne par ligne, puis le résultat est contrôlé. Pour une question de cours, un exemple concret remplace le calcul.</div>
+
+          <div class="exam-toolbar" aria-label="Filtres des annales">
+            <label for="exam-search">Chercher une question<input id="exam-search" type="search" placeholder="Ex. DMA, renommage, Spidergon, SIMD…" autocomplete="off"></label>
+            <label for="exam-year">Année<select id="exam-year"><option value="all">Toutes</option><option value="2026">2025–2026</option><option value="2022">2021–2022</option><option value="2021">2020–2021</option><option value="2016">2015–2016</option><option value="2014">2013–2014</option></select></label>
+            <label for="exam-theme">Thème<select id="exam-theme"><option value="all">Tous les thèmes</option></select></label>
+            <button class="btn ghost" id="exam-toggle-all" type="button" aria-expanded="false">Tout déplier</button>
+          </div>
+          <p class="exam-result-count" id="exam-result-count" role="status">Chargement des corrigés…</p>
+          <div id="exam-root" class="exam-root"></div>
+
+          <div class="warning exam-source-note"><strong>Hypothèses annoncées, pas cachées</strong>Certains anciens sujets renvoient à un article ou emploient une convention de cycle/hop count implicite. Le corrigé donne l’hypothèse retenue et, quand nécessaire, les deux conventions : c’est exactement ce qu’il faut faire dans une bonne copie.</div>
+        </section>
+
+        <section class="course-panel" id="panel-synthesis" data-panel="synthesis">
+          <div class="panel-hero exam-hero">
+            <p class="eyebrow">Dernière ligne droite</p>
+            <h1>La fiche express à relire avant l’examen</h1>
+            <p class="lead">Les équations, distinctions et raisonnements qui permettent de reconstruire une réponse même si la formulation exacte t’échappe.</p>
+            <div class="hero-actions"><button class="btn" id="print-course" type="button">Imprimer / enregistrer en PDF</button><button class="btn secondary" data-go="quiz" type="button">Lancer l’examen blanc</button></div>
+          </div>
+
+          <div class="section-heading"><div><p class="eyebrow">Formules</p><h2>Le noyau dur</h2></div></div>
+          <div class="three-col">
+            <div class="card searchable" data-title="Formules énergie mémoire cache" data-panel-id="synthesis">
+              <h3>SoC, énergie et mémoire</h3>
+              <span class="formula">P<span class="sub">dyn</span> = ½ C V² f<span class="sub">trans</span></span>
+              <span class="formula">AMAT = T<span class="sub">hit</span> + miss rate × miss penalty</span>
+              <span class="formula">burst, modèle idéal (1 mot/cycle, sans attente) : η = L/(A+L)</span>
+              <span class="formula">cache : bloc = ⌊adresse / taille_ligne⌋<br>set = bloc mod N<span class="sub">sets</span><br>tag = ⌊bloc / N<span class="sub">sets</span>⌋</span>
+            </div>
+            <div class="card searchable" data-title="Formules fixe convolution CNN" data-panel-id="synthesis">
+              <h3>Virgule fixe et CNN</h3>
+              <span class="formula">Qe.v : pas = 2<span class="sup">−v</span> · max = 2<span class="sup">e</span>−2<span class="sup">−v</span></span>
+              <span class="formula">addition : e=max(ea,eb)+1 ; v=max(va,vb)</span>
+              <span class="formula">multiplication : e=ea+eb ; v=va+vb</span>
+              <span class="formula">MAC = H<span class="sub">out</span>W<span class="sub">out</span>C<span class="sub">out</span>C<span class="sub">in</span>K<span class="sub">h</span>K<span class="sub">w</span></span>
+            </div>
+            <div class="card searchable" data-title="Formules Amdahl ROB DMA NoC distance" data-panel-id="synthesis">
+              <h3>Parallélisme, DMA et NoC</h3>
+              <span class="formula">Amdahl : S(N) = 1 / ((1−p) + p/N)<br>S(∞) = 1/(1−p)</span>
+              <span class="formula">DMA contigu 2014 : T(Q) = ⌈Q/16⌉×30 + 2⌈Q/4⌉ + 400 cycles</span>
+              <span class="formula">Spidergon : liens = 3N/2 · diamètre = ⌈N/4⌉</span>
+              <span class="formula">tore n×m : liens = 2nm<br>D<span class="sub">hops</span> = ⌊n/2⌋ + ⌊m/2⌋</span>
+            </div>
+          </div>
+
+          <div class="section-heading"><div><p class="eyebrow">Distinctions</p><h2>Les paires à ne jamais confondre</h2></div></div>
+          <div class="table-scroll">
+            <table class="compare-table searchable" data-title="Différences pièges examen SoC" data-panel-id="synthesis">
+              <thead><tr><th>A</th><th>B</th><th>Différence décisive</th></tr></thead>
+              <tbody>
+                <tr><td>Maître</td><td>Esclave</td><td>L’initiateur de la transaction, pas le sens de la donnée.</td></tr>
+                <tr><td>Arbitre</td><td>Décodeur</td><td>Choisit le maître / choisit l’esclave.</td></tr>
+                <tr><td>Bus partagé</td><td>NoC</td><td>Un chemin global simple / liens point à point, routes et arbitrages locaux.</td></tr>
+                <tr><td>Cache</td><td>Scratchpad</td><td>Placement automatique / placement explicite et prédictible.</td></tr>
+                <tr><td>Débit</td><td>Latence</td><td>Mots par seconde / attente d’un mot ; un burst amortit le coût initial et améliore surtout le débit soutenu, sans nécessairement réduire la latence du premier mot.</td></tr>
+                <tr><td>Direct-mapped</td><td>N-way</td><td>Une destination / N destinations dans un set, comparateurs supplémentaires.</td></tr>
+                <tr><td>Write-through</td><td>Write-back</td><td>Propagation immédiate / écriture différée d’une ligne dirty.</td></tr>
+                <tr><td>SIMD</td><td>VLIW</td><td>Même opération sur plusieurs données / opérations différentes émises ensemble.</td></tr>
+                <tr><td>Troncature</td><td>Saturation</td><td>Retirer des bits / bloquer à une borne au lieu d’un modulo.</td></tr>
+                <tr><td>MAC</td><td>Opérations</td><td>Une multiplication-accumulation / souvent deux opérations élémentaires.</td></tr>
+                <tr><td>Apprentissage</td><td>Inférence</td><td>Ajuster θ avec erreur / exécuter θ figés.</td></tr>
+                <tr><td>Canal l</td><td>Canal c</td><td>Entrée accumulée / sortie produite par un kernel complet.</td></tr>
+                <tr><td>Terminé</td><td>Committé</td><td>Résultat calculé mais spéculatif / effet devenu architectural en ordre.</td></tr>
+                <tr><td>RAW</td><td>WAR ou WAW</td><td>Vrai flot de valeur / dépendances de nom supprimables par renommage.</td></tr>
+                <tr><td>ROB</td><td>Stations de réservation</td><td>Retrait précis en ordre / attente et choix hors ordre des instructions prêtes.</td></tr>
+                <tr><td>Cohérence</td><td>Synchronisation</td><td>Accord sur les copies d’une ligne / ordre logique et exclusion entre tâches.</td></tr>
+                <tr><td>Snooping</td><td>Répertoire</td><td>Diffusion observée par tous / messages ciblés vers les partageurs connus.</td></tr>
+                <tr><td>SC réussi</td><td>SC échoué</td><td>Code retour 0 / code non nul et reprise obligatoire depuis LR.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section-heading"><div><p class="eyebrow">Dessins</p><h2>Ce que tu dois pouvoir reconstruire</h2></div></div>
+          <div class="three-col">
+            <div class="card"><span class="tag">1</span><h3>SoC générique</h3><p>CPU/cache, RAM interne, IP, contrôleur DDR, analogique/MEMS/I/O autour du bus.</p></div>
+            <div class="card"><span class="tag">2</span><h3>Bus multi-M/S</h3><p>Requêtes → arbitre ; adresse → décodeur ; sélection ; donnée/contrôle.</p></div>
+            <div class="card"><span class="tag">3</span><h3>DMA</h3><p>Esclave de configuration, maître de lecture/écriture, FIFO, interruption.</p></div>
+            <div class="card"><span class="tag blue">4</span><h3>AXI</h3><p>AR/R pour lire ; AW/W/B pour écrire ; VALID/READY et ID.</p></div>
+            <div class="card"><span class="tag gold">5</span><h3>SDRAM</h3><p>Banc → ACT ligne → READ colonne → CL → burst → précharge.</p></div>
+            <div class="card"><span class="tag gold">6</span><h3>Cache N-way</h3><p>Adresse tag/index/offset, N comparaisons, mux, hit/miss.</p></div>
+            <div class="card"><span class="tag coral">7</span><h3>Convolution</h3><p>Fenêtre K×K sur C<sub>in</sub>, réduction, biais, canal C<sub>out</sub>.</p></div>
+            <div class="card"><span class="tag coral">8</span><h3>Accélérateur 3×3</h3><p>Line buffers, 9 multiplicateurs, arbre, accumulateur, SRAM de sortie.</p></div>
+            <div class="card"><span class="tag coral">9</span><h3>im2col / GEMM</h3><p>Fenêtres en lignes, kernels en colonnes, tuiles compatibles avec le cube.</p></div>
+            <div class="card"><span class="tag blue">10</span><h3>ROB précis</h3><p>Allocation en ordre, fin OoO, exception mémorisée, commit en ordre et flush des jeunes.</p></div>
+            <div class="card"><span class="tag blue">11</span><h3>Tomasulo</h3><p>RAT/tags, stations de réservation, unités, broadcast puis réveil des consommateurs.</p></div>
+            <div class="card"><span class="tag gold">12</span><h3>MSI</h3><p>Deux caches, états M/S/I, transactions RM/WM/IV/WB et mémoire parfois périmée.</p></div>
+            <div class="card"><span class="tag gold">13</span><h3>LR/SC</h3><p>Boucle LR → calcul → SC ; retour non nul vers LR, puis acquire/release autour de la section critique.</p></div>
+          </div>
+
+          <div class="section-heading"><div><p class="eyebrow">Copie d’examen</p><h2>Un raisonnement qui rapporte des points</h2></div></div>
+          <div class="timeline">
+            <div class="timeline-step"><strong>1 · Définir</strong><small>Rôles, hypothèses et unités avant tout calcul.</small></div>
+            <div class="timeline-step"><strong>2 · Modéliser</strong><small>Équation, schéma ou nid de boucles.</small></div>
+            <div class="timeline-step"><strong>3 · Chiffrer</strong><small>Débit théorique, données/cycle, mémoire requise.</small></div>
+            <div class="timeline-step"><strong>4 · Nuancer</strong><small>Goulot, coût, latence, bords et contexte.</small></div>
+          </div>
+          <div class="exam-tip"><strong>Phrase passe-partout, mais juste</strong>La ressource de calcul supplémentaire n’augmente le débit que si l’infrastructure et la hiérarchie mémoire peuvent fournir les opérandes et évacuer les résultats au même rythme.</div>
+        </section>
+
+        <section class="course-panel" id="panel-flashcards" data-panel="flashcards">
+          <div class="panel-hero exam-hero">
+            <p class="eyebrow">Rappel actif</p>
+            <h1>Flashcards</h1>
+            <p class="lead">Lis la question, réponds à voix haute, puis retourne la carte. Les cartes difficiles reviennent plus souvent pendant cette session.</p>
+          </div>
+          <div class="flashcard-wrap">
+            <div class="flashcard" id="flashcard" tabindex="0" role="button" aria-labelledby="flash-question" aria-describedby="flash-instruction" aria-controls="flash-answer" aria-expanded="false">
+              <div class="flash-face front" aria-hidden="false"><div><p class="eyebrow" id="flash-theme">Fondations</p><strong id="flash-question">Qu’est-ce qu’un SoC ?</strong><p id="flash-instruction" style="color:var(--ink-soft);margin-top:1rem">Clique pour révéler la réponse</p></div></div>
+              <div class="flash-face back" aria-hidden="true"><p id="flash-answer">Un système complet intégré sur une puce : calcul, mémoire locale, interconnexion, accélérateurs et interfaces ; la RAM principale peut rester externe.</p></div>
+            </div>
+            <p class="sr-only" id="flash-announcement" aria-live="polite"></p>
+          </div>
+          <div class="flash-controls">
+            <button class="btn secondary" id="flash-hard" type="button">À revoir</button>
+            <button class="btn ghost" id="flash-prev" type="button">← Précédente</button>
+            <button class="btn" id="flash-next" type="button">Je savais →</button>
+          </div>
+          <p id="flash-counter" style="text-align:center;color:var(--ink-soft)">Carte 1 / 60</p>
+        </section>
+
+        <section class="course-panel" id="panel-quiz" data-panel="quiz">
+          <div class="panel-hero exam-hero">
+            <p class="eyebrow">Examen blanc</p>
+            <h1>Un vrai sujet de 2 h,<br>noté sur 100.</h1>
+            <p class="lead">Huit exercices cohérents et 31 sous-questions couvrent tout le module, avec données communes et sous-barèmes détaillés. Fais d’abord le sujet sur papier ; les corrections complètes restent repliées jusqu’à ce que tu les demandes.</p>
+          </div>
+
+          <div class="stats-grid mock-stats" aria-label="Format de l’examen blanc"><div class="stat"><strong>2 h</strong><span>durée conseillée</span></div><div class="stat"><strong>100</strong><span>points</span></div><div class="stat"><strong>8</strong><span>exercices complets</span></div><div class="stat"><strong>31</strong><span>sous-questions</span></div></div>
+
+          <div class="exam-method mock-method">
+            <div><span class="method-number">1</span><strong>Conditions réelles</strong><small>Calculatrice simple, feuille, corrections fermées.</small></div>
+            <div><span class="method-number">2</span><strong>Justifie</strong><small>Écris hypothèses, unités et états intermédiaires.</small></div>
+            <div><span class="method-number">3</span><strong>Corrige</strong><small>Compte les points puis refais seulement les erreurs.</small></div>
+          </div>
+
+          <div id="mock-exam-root" class="mock-exam-root"><p class="exam-result-count">Chargement du sujet blanc complet…</p></div>
+
+          <div class="section-heading"><div><p class="eyebrow">Échauffement facultatif</p><h2>QCM de révision rapide</h2></div><p>Ce QCM n’est plus présenté comme l’examen : il sert à vérifier les automatismes avant ou après le vrai sujet écrit.</p></div>
+          <div class="quiz-session-controls">
+            <label for="quiz-length">Longueur de la série<select id="quiz-length"><option value="15">15 questions · express</option><option value="35">35 questions · révision</option><option value="all">Toute la banque · complet</option></select></label>
+          </div>
+          <div class="quiz-shell">
+            <div class="quiz-progress"><span id="quiz-position">Question 1 / 15</span><strong id="quiz-score">0 point</strong></div>
+            <div class="progress-track quiz-progress-track"><div class="progress-fill" id="quiz-progress"></div></div>
+            <div class="quiz-question" id="quiz-card">
+              <p class="eyebrow" id="quiz-theme">Fondations</p>
+              <h2 id="quiz-prompt" tabindex="-1">Chargement du quiz…</h2>
+              <div class="quiz-options" id="quiz-options" role="group" aria-labelledby="quiz-prompt"></div>
+              <div class="quiz-explanation" id="quiz-explanation" role="status" aria-live="polite"></div>
+              <div class="hero-actions"><button class="btn" id="quiz-next" type="button" disabled>Question suivante →</button><button class="btn secondary" id="quiz-restart" type="button">Nouvelle série</button></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="annales-2025.js"></script>
+  <script src="annales-modern.js"></script>
+  <script src="annales-2015.js"></script>
+  <script src="annales-2013.js"></script>
+  <script src="annales.js"></script>
+  <script src="examen-blanc.js"></script>
+  <script src="app.js"></script>
+  <script src="advanced.js"></script>
+</body>
+</html>
