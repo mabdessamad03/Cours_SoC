@@ -2,6 +2,10 @@
 
 Site pédagogique hors ligne regroupant les cours, animations, résumés, annales corrigées et un examen blanc complet du module SoC.
 
+## Version en ligne
+
+[Ouvrir le cours interactif](https://mabdessamad03.github.io/Cours_SoC/)
+
 ## Ouvrir le site
 
 Double-cliquer sur **`OUVRIR_LE_COURS.html`**. Aucune installation et aucune connexion Internet ne sont nécessaires.
