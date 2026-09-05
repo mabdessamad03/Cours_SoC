@@ -72,7 +72,7 @@
 
         <p class="nav-section-label">Entraînement</p>
         <button class="nav-link exam-nav" data-target="annales" type="button">
-          <span class="nav-icon">✎</span><span>Annales corrigées</span><span class="nav-count">83</span>
+          <span class="nav-icon">✎</span><span>Annales corrigées</span><span class="nav-count">108</span>
         </button>
         <button class="nav-link" data-target="synthesis" type="button">
           <span class="nav-icon">Σ</span><span>Fiche express</span><span class="nav-count">1</span>
@@ -111,7 +111,7 @@
           <div class="panel-hero">
             <p class="eyebrow">Architecture des systèmes sur puce</p>
             <h1>Comprendre le SoC,<br>pas réciter des slides.</h1>
-            <p class="lead">Les huit supports et cinq annales ont été fusionnés en un parcours visuel : cours expliqué, animations rejouables, calculs guidés, énoncés fidèles et réponses rédigées comme à l’examen.</p>
+            <p class="lead">Les huit supports et six annales ont été fusionnés en un parcours visuel : cours expliqué, animations rejouables, calculs guidés, énoncés fidèles et réponses rédigées comme à l’examen.</p>
             <div class="hero-actions">
               <button class="btn" data-go="intro" type="button">Commencer le parcours →</button>
               <button class="btn secondary" data-go="annales" type="button">Ouvrir les annales corrigées</button>
@@ -119,10 +119,10 @@
           </div>
 
           <div class="stats-grid" aria-label="Statistiques du cours">
-            <div class="stat"><strong>13</strong><span>PDF fusionnés</span></div>
-            <div class="stat"><strong>605</strong><span>pages analysées</span></div>
+            <div class="stat"><strong>14</strong><span>PDF fusionnés</span></div>
+            <div class="stat"><strong>615</strong><span>pages analysées</span></div>
             <div class="stat"><strong>41</strong><span>leçons progressives</span></div>
-            <div class="stat"><strong>83</strong><span>questions d’annales corrigées</span></div>
+            <div class="stat"><strong>108</strong><span>questions d’annales corrigées</span></div>
           </div>
 
           <div class="section-heading">
@@ -198,7 +198,7 @@
           </div>
 
           <article class="annals-callout" data-go="annales" tabindex="0">
-            <div><span class="tag gold">Priorité examen</span><h2>5 annales · 83 corrections guidées</h2><p>Retrouve désormais l’énoncé complet avant chaque correction, puis suis les données, le raisonnement pas à pas et la conclusion prête à écrire.</p></div>
+            <div><span class="tag gold">Priorité examen</span><h2>6 annales · 108 corrections guidées</h2><p>Retrouve désormais l’énoncé complet avant chaque correction, puis suis les données, le raisonnement pas à pas et la conclusion prête à écrire.</p></div>
             <span class="annals-arrow" aria-hidden="true">→</span>
           </article>
         </section>
@@ -1440,7 +1440,7 @@ if (lu == mon_ID) {
             <div class="hero-actions"><button class="btn" id="exam-open-first" type="button">Commencer par une question</button><button class="btn secondary" id="exam-random" type="button">Question au hasard</button></div>
           </div>
 
-          <div class="stats-grid exam-stats" aria-label="Contenu des annales"><div class="stat"><strong>5</strong><span>sujets complets</span></div><div class="stat"><strong>83</strong><span>questions formelles</span></div><div class="stat"><strong>27</strong><span>pages d’énoncés</span></div><div class="stat"><strong>100 %</strong><span>corrigé et vérifié</span></div></div>
+          <div class="stats-grid exam-stats" aria-label="Contenu des annales"><div class="stat"><strong>6</strong><span>sujets complets</span></div><div class="stat"><strong>108</strong><span>questions formelles</span></div><div class="stat"><strong>37</strong><span>pages d’énoncés</span></div><div class="stat"><strong>100 %</strong><span>corrigé et vérifié</span></div></div>
 
           <div class="exam-method">
             <div><span class="method-number">1</span><strong>Tente</strong><small>Écris les idées et formules sans aide.</small></div>
@@ -1452,7 +1452,7 @@ if (lu == mon_ID) {
 
           <div class="exam-toolbar" aria-label="Filtres des annales">
             <label for="exam-search">Chercher une question<input id="exam-search" type="search" placeholder="Ex. DMA, renommage, Spidergon, SIMD…" autocomplete="off"></label>
-            <label for="exam-year">Année<select id="exam-year"><option value="all">Toutes</option><option value="2026">2025–2026</option><option value="2022">2021–2022</option><option value="2021">2020–2021</option><option value="2016">2015–2016</option><option value="2014">2013–2014</option></select></label>
+            <label for="exam-year">Année<select id="exam-year"><option value="all">Toutes</option><option value="2026">2025–2026</option><option value="2025">2024–2025</option><option value="2022">2021–2022</option><option value="2021">2020–2021</option><option value="2016">2015–2016</option><option value="2014">2013–2014</option></select></label>
             <label for="exam-theme">Thème<select id="exam-theme"><option value="all">Tous les thèmes</option></select></label>
             <button class="btn ghost" id="exam-toggle-all" type="button" aria-expanded="false">Tout déplier</button>
           </div>
@@ -1609,6 +1609,7 @@ if (lu == mon_ID) {
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="annales-2025.js"></script>
+  <script src="annales-2024-2025.js"></script>
   <script src="annales-modern.js"></script>
   <script src="annales-2015.js"></script>
   <script src="annales-2013.js"></script>

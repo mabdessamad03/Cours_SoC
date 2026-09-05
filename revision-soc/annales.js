@@ -6,6 +6,7 @@
 
   const exams = [
     ...(window.SOC_EXAMS_2025 || []),
+    ...(window.SOC_EXAMS_2024_2025 || []),
     ...(window.SOC_EXAMS_MODERN || []),
     ...(window.SOC_EXAMS_2015 || []),
     ...(window.SOC_EXAMS_2013 || [])

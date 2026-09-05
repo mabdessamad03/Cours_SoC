@@ -5,7 +5,7 @@ Ouvrir `index.html` dans un navigateur récent. Le site fonctionne hors ligne : 
 ## Contenu
 
 - 8 supports de cours synthétisés en 41 leçons ;
-- 5 annales (2013–2014 à 2025–2026), soit 83 corrections guidées : énoncé du PDF, données, raisonnement détaillé, calculs, conclusion, intuition et pièges ;
+- 6 annales (2013–2014 à 2025–2026), soit 108 corrections guidées : énoncé du PDF, données, raisonnement détaillé, calculs, conclusion, intuition et pièges ;
 - modes « Essentiel » et « Complet » ;
 - animations SoC, puissance CMOS, arbitrage, bursts, AXI, SDRAM, cache, quantification fixe, convolution, MaxPool, SIMD, tuilage matriciel, ROB/exceptions précises, Tomasulo, Amdahl, MSI et opérations atomiques ;
 - fiche express et cours complet imprimables en PDF ;

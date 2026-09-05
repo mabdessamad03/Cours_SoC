@@ -15,7 +15,7 @@ Double-cliquer sur **`OUVRIR_LE_COURS.html`**. Aucune installation et aucune con
 - 8 chapitres de cours illustrés et interactifs ;
 - modes **Essentiel** et **Complet** ;
 - thème clair/sombre mémorisé ;
-- 83 questions d’annales corrigées, dont l’examen 2025–2026 ;
+- 108 questions d’annales corrigées, dont les examens 2024–2025 et 2025–2026 ;
 - examen blanc de 120 minutes noté sur 100 ;
 - quiz, flashcards, recherche et suivi de progression.
 
